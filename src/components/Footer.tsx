@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { ShieldCheck, Truck, RotateCcw } from "lucide-react";
 
 export default function Footer() {
@@ -8,13 +9,24 @@ export default function Footer() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8 pb-8 border-b border-stone-800">
           {/* Brand */}
           <div>
-            <div className="flex items-center gap-2.5 mb-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-800 flex items-center justify-center text-white font-bold text-sm">
-                শ
+            <div className="flex items-center gap-3 mb-3">
+              <div className="relative h-12 w-12 rounded-xl bg-white p-1 border border-stone-700/80 shadow-sm shrink-0 flex items-center justify-center">
+                <Image
+                  src="/images/shifa-logo.png"
+                  alt="শিফা কেয়ার লোগো"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
               </div>
-              <span className="text-base sm:text-lg font-bold text-white">
-                শিফা কেয়ার (Shifa Care)
-              </span>
+              <div>
+                <span className="text-base sm:text-lg font-bold text-white block leading-tight">
+                  শিফা কেয়ার
+                </span>
+                <span className="text-xs text-stone-400 font-latin">
+                  Shifa Pain Care Oil
+                </span>
+              </div>
             </div>
             <p className="text-stone-400 leading-relaxed font-normal">
               প্রকৃতির খাঁটি ২৭টি ভেষজ উপাদানের সমন্বয়ে তৈরি শিফা পেইন কেয়ার অয়েল। বাতের ব্যথা, হাঁটু ও কোমর ব্যথায় বিশ্বস্ত প্রাকৃতিক সমাধান।

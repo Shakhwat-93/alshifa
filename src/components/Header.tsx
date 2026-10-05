@@ -1,14 +1,22 @@
 import React from "react";
+import Image from "next/image";
 import { PhoneCall, ShoppingBag } from "lucide-react";
 
 export default function Header() {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/90 shadow-soft">
       <div className="max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 h-14 sm:h-16 lg:h-20 flex items-center justify-between">
-        {/* Brand */}
-        <div className="flex items-center gap-2.5 sm:gap-3.5">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-11 lg:h-11 rounded-xl bg-emerald-800 text-white flex items-center justify-center font-bold text-base sm:text-lg lg:text-xl shadow-xs">
-            শ
+        {/* Brand with Transparent Logo */}
+        <a href="#" className="flex items-center gap-2 sm:gap-3 group">
+          <div className="relative h-10 w-10 sm:h-12 sm:w-12 lg:h-14 lg:w-14 shrink-0 transition-transform duration-300 group-hover:scale-105">
+            <Image
+              src="/images/shifa-logo.png"
+              alt="শিফা পেইন কেয়ার অয়েল লোগো"
+              fill
+              sizes="(max-width: 640px) 40px, (max-width: 1024px) 48px, 56px"
+              priority
+              className="object-contain"
+            />
           </div>
           <div>
             <div className="flex items-center gap-1.5">
@@ -23,7 +31,7 @@ export default function Header() {
               Shifa Pain Care Oil • ১০০% প্রাকৃতিক ভেষজ
             </p>
           </div>
-        </div>
+        </a>
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
