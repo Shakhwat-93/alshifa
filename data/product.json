@@ -1,0 +1,129 @@
+{
+  "product": {
+    "id": "shifa-pain-care-oil",
+    "name_bn": "শিফা পেইন কেয়ার অয়েল",
+    "name_en": "Shifa Pain Care Oil",
+    "tagline_en": "Natural Care, Everyday Comfort",
+    "tagline_bn": "প্রকৃতির ছোঁয়ায় ব্যথা নিরাময়ের বিশ্বস্ত সঙ্গী",
+    "headline": "শরীরের ব্যথা নিরাময়ে তেল",
+    "short_description": "শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে আরামদায়ক অনুভূতি পেতে এটি ব্যবহার করা যেতে পারে।",
+    "full_description": "শিফা পেইন কেয়ার অয়েল হলো ম্যাসাজের জন্য তৈরি একটি প্রিমিয়াম পেইন-রিলিফ অয়েল। এটি ২৭টি দুর্লভ ও মূল্যবান ভেষজ প্রাকৃতিক উপাদানের সমন্বয়ে তৈরি। শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে দ্রুত আরামদায়ক অনুভূতি পেতে এটি অত্যন্ত কার্যকরী।",
+    "hotline": "+8809638014666",
+    "currency": "BDT",
+    "currency_symbol": "৳",
+    "delivery": {
+      "type": "Free Delivery",
+      "text_bn": "ফ্রী ডেলিভারী",
+      "cost": 0
+    },
+    "features": [
+      "শরীরের ব্যথা নিরাময়ে প্রাকৃতিক তেল",
+      "২৭টি দুর্লভ ও মূল্যবান ভেষজ প্রাকৃতিক উপাদানে তৈরি",
+      "১০০% প্রাকৃতিক ও পরিবেশবান্ধব",
+      "কোনো ক্ষতিকর রাসায়নিক বা পার্শ্বপ্রতিক্রিয়া নেই",
+      "ল্যাব টেস্ট অনুমোদিত ও সার্টিফাইড"
+    ],
+    "ingredients": [
+      { "name_bn": "ক্যাস্টর অয়েল", "name_en": "Castor Oil" },
+      { "name_bn": "আদার দ্রবণীয় নির্যাস", "name_en": "Ginger Soluble Extract" },
+      { "name_bn": "রসুনের দ্রবণীয় নির্যাস", "name_en": "Garlic Soluble Extract" },
+      { "name_bn": "লবঙ্গের নির্যাস", "name_en": "Clove Extract" },
+      { "name_bn": "দারুচিনি", "name_en": "Cinnamon Extract" },
+      { "name_bn": "কালোজিরার তেল", "name_en": "Black Seed (Nigella Sativa) Oil" },
+      { "name_bn": "অ্যালোভেরার নির্যাস", "name_en": "Aloe Vera Extract" },
+      { "name_bn": "আকন্দ পাতার নির্যাস", "name_en": "Calotropis Gigantea (Akanda) Extract" },
+      { "name_bn": "নিমপাতার নির্যাস", "name_en": "Neem Leaf Extract" },
+      { "name_bn": "হলুদের নির্যাস", "name_en": "Turmeric (Curcumin) Extract" },
+      { "name_bn": "ক্যাপসাইসিন", "name_en": "Capsaicin" },
+      { "name_bn": "ইউক্যালিপটাস অয়েল", "name_en": "Eucalyptus Oil" },
+      { "name_bn": "মেনথল", "name_en": "Menthol" },
+      { "name_bn": "পেপারমিন্ট অয়েল", "name_en": "Peppermint Oil" }
+    ],
+    "usage_instructions": {
+      "title_bn": "ব্যবহারের নিয়ম",
+      "steps": [
+        "প্রয়োজনীয় পরিমাণ তেল ব্যথাযুক্ত বা অস্বস্তিকর স্থানে নিন।",
+        "৫ থেকে ১০ মিনিট হালকা হাতে বৃত্তাকারে ম্যাসাজ করুন।",
+        "প্রয়োজন অনুযায়ী দিনে ২ থেকে ৩ বার ব্যবহার করা যেতে পারে (বিশেষ করে রাতে ঘুমানোর আগে)।"
+      ]
+    },
+    "certifications": {
+      "title_bn": "আমাদের সার্টিফিকেশন",
+      "description": "সরকারি ও ল্যাব টেস্ট মানদণ্ড অনুযায়ী অনুমোদিত এবং ভেষজ গুণাবলীতে পরীক্ষিত।",
+      "image": "/assets/images/certification-approval.jpg"
+    },
+    "customer_reviews": [
+      {
+        "name": "রহিমা খাতুন",
+        "location": "রাজশাহী",
+        "rating": 5,
+        "comment": "কোমরের ব্যথায় রাতে ঘুমানোর আগে ম্যাসাজ করি, বেশ আরাম পাই। তেলের গন্ধটাও ভালো লেগেছে।",
+        "avatar": "/assets/images/review-rahima-khatun.avif"
+      },
+      {
+        "name": "মোঃ আব্দুল করিম",
+        "location": "নাটোর",
+        "rating": 5,
+        "comment": "আম্মার হাঁটুর ব্যথার জন্য নিয়েছিলাম। নিয়মিত ম্যাসাজ করে দিচ্ছি, উনি আরাম পাচ্ছেন।",
+        "avatar": "/assets/images/review-abdul-karim.jpg"
+      },
+      {
+        "name": "মোঃ সাকিব হোসেন",
+        "location": "মিরপুর, ঢাকা",
+        "rating": 5,
+        "comment": "অফিস শেষে ঘাড়ে আর কাঁধে হালকা ম্যাসাজ করলে ক্লান্তি অনেকটাই কমে যায়।",
+        "avatar": "/assets/images/review-sakib-hossain.jpg"
+      },
+      {
+        "name": "তানভীর হাসান",
+        "location": "চট্টগ্রাম",
+        "rating": 5,
+        "comment": "খেলাধুলার পর পেশীর অস্বস্তিতে ব্যবহার করি, ভালো লাগে। ডেলিভারিও তাড়াতাড়ি পেয়েছি।",
+        "avatar": "/assets/images/review-tanvir-hasan.jpg"
+      },
+      {
+        "name": "মোঃ জাহিদুল ইসলাম",
+        "location": "বগুড়া",
+        "rating": 5,
+        "comment": "আব্বার পায়ের ব্যথায় প্রতিদিন ম্যাসাজ করে দেই, উনি বেশ আরাম পান। আবার অর্ডার করব।",
+        "avatar": "/assets/images/review-zahidul-islam.jpg"
+      }
+    ],
+    "images": {
+      "product_main": "/assets/images/product-bottle-main.png",
+      "hero_banner": "/assets/images/hero-banner.png",
+      "ingredients_showcase": "/assets/images/herbal-ingredients-showcase.png",
+      "ad_banner": "/assets/images/product-ad-banner.png",
+      "certification": "/assets/images/certification-approval.jpg"
+    },
+    "order_form_schema": {
+      "fields": [
+        {
+          "name": "fullName",
+          "label_bn": "আপনার সম্পূর্ণ নাম লিখুন",
+          "placeholder_bn": "যেমন: মো: রহিম উদ্দিন",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "name": "address",
+          "label_bn": "গ্রাম বা এলাকা....... থানা ......জেলা",
+          "placeholder_bn": "যেমন: বাড়ি নং ১২, রোড নং ৫, ধানমন্ডি, ঢাকা",
+          "required": true,
+          "type": "text"
+        },
+        {
+          "name": "phone",
+          "label_bn": "১১ ডিজিটের মোবাইল নাম্বার লিখুন",
+          "placeholder_bn": "01XXXXXXXXX",
+          "required": true,
+          "type": "tel"
+        }
+      ],
+      "shipping_option": {
+        "title": "ফ্রী ডেলিভারী",
+        "amount": 0
+      }
+    }
+  }
+}
