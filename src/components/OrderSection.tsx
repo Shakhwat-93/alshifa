@@ -32,38 +32,19 @@ interface OrderSuccessData {
 const packages: PackageOption[] = [
   {
     id: "single",
-    name: "১টি ফাইল (একক ব্যবহারকারী)",
-    subtitle: "১ জনের জন্য সাধারণ ট্রায়াল প্যাক",
+    name: "১টি ফাইল (শিফা পেইন কেয়ার অয়েল)",
+    subtitle: "১০০% খাঁটি ভেষজ তেল • ফ্রি হোম ডেলিভারি",
     bottles: 1,
     price: 950,
     regularPrice: 1450,
     savings: 500,
-  },
-  {
-    id: "combo",
-    name: "২টি ফাইল (কম্বো অফার)",
-    subtitle: "ফ্রি ডেলিভারি + সর্বোচ্চ সাশ্রয়ী প্যাকেজ",
-    bottles: 2,
-    price: 1750,
-    regularPrice: 2900,
-    savings: 1150,
     isPopular: true,
-    tag: "🔥 সেরা অফার (জনপ্রিয়)",
-  },
-  {
-    id: "family",
-    name: "৩টি ফাইল (ফ্যামিলি মেগা সেভার)",
-    subtitle: "পরিবারের সবার জন্য দীর্ঘমেয়াদী স্বস্তি",
-    bottles: 3,
-    price: 2450,
-    regularPrice: 4350,
-    savings: 1900,
-    tag: "🏆 সর্বোচ্চ সাশ্রয়",
+    tag: "🔥 স্পেশাল অফার",
   },
 ];
 
 export default function OrderSection() {
-  const [selectedPkg, setSelectedPkg] = useState<PackageOption>(packages[1]); // Default popular combo
+  const selectedPkg = packages[0];
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -152,61 +133,47 @@ export default function OrderSection() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
-                {packages.map((pkg) => {
-                  const isSelected = selectedPkg.id === pkg.id;
-                  return (
-                    <div
-                      key={pkg.id}
-                      onClick={() => setSelectedPkg(pkg)}
-                      className={`relative rounded-xl p-3.5 sm:p-4 lg:p-5 border-2 transition cursor-pointer flex sm:flex-col justify-between items-center sm:items-start gap-3 ${
-                        isSelected
-                          ? "border-emerald-600 bg-emerald-50/50 shadow-sm"
-                          : "border-stone-200 hover:border-emerald-300 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-start gap-2.5 min-w-0">
-                        <input
-                          type="radio"
-                          name="package"
-                          checked={isSelected}
-                          onChange={() => setSelectedPkg(pkg)}
-                          className="w-4 h-4 text-emerald-700 mt-1 shrink-0 accent-emerald-700"
-                        />
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <h4 className="font-bold text-stone-900 text-xs sm:text-sm md:text-base leading-tight">
-                              {pkg.name}
-                            </h4>
-                            {pkg.tag && (
-                              <span
-                                className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                                  pkg.isPopular
-                                    ? "bg-orange-500 text-white"
-                                    : "bg-emerald-700 text-white"
-                                }`}
-                              >
-                                {pkg.tag}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[11px] sm:text-xs text-stone-500 font-normal leading-tight mt-1">
-                            {pkg.subtitle}
-                          </p>
+              <div className="w-full">
+                {packages.map((pkg) => (
+                  <div
+                    key={pkg.id}
+                    className="relative rounded-2xl p-4 sm:p-5 border-2 border-emerald-600 bg-emerald-50/50 shadow-xs flex justify-between items-center gap-3 sm:gap-4"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="radio"
+                        name="package"
+                        checked={true}
+                        readOnly
+                        className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-700 shrink-0 accent-emerald-700"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h4 className="font-bold text-stone-900 text-sm sm:text-base leading-tight">
+                            {pkg.name}
+                          </h4>
+                          {pkg.tag && (
+                            <span className="text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded bg-emerald-700 text-white">
+                              {pkg.tag}
+                            </span>
+                          )}
                         </div>
-                      </div>
-
-                      <div className="text-right sm:text-left shrink-0 sm:pt-3 sm:border-t sm:border-stone-200/80 sm:w-full">
-                        <div className="text-base sm:text-xl lg:text-2xl font-black text-emerald-800 font-latin leading-tight">
-                          ৳{pkg.price}
-                        </div>
-                        <div className="text-[10px] sm:text-xs text-stone-400 line-through font-latin">
-                          ৳{pkg.regularPrice}
-                        </div>
+                        <p className="text-xs text-stone-500 font-normal leading-tight mt-1">
+                          {pkg.subtitle}
+                        </p>
                       </div>
                     </div>
-                  );
-                })}
+
+                    <div className="text-right shrink-0">
+                      <div className="text-xl sm:text-2xl font-black text-emerald-800 font-latin leading-tight">
+                        ৳{pkg.price}
+                      </div>
+                      <div className="text-xs text-stone-400 line-through font-latin">
+                        ৳{pkg.regularPrice}
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
