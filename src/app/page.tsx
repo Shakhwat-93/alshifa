@@ -329,37 +329,16 @@ export default function ShifaLandingPage() {
     return () => clearInterval(interval);
   }, [timerHours]);
 
-  // ---- Dynamic Order Form & Pricing Calculation ----
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number | null>(null);
+  // ---- Order Form & Pricing (Single bottle package, 100% Free Delivery) ----
   const [quantity, setQuantity] = useState(1);
-  const [deliveryArea, setDeliveryArea] = useState<"inside" | "outside">("inside");
 
-  // Determine current unit price & variant name
-  const variants = productData?.variants || [];
-  const hasVariants = Array.isArray(variants) && variants.length > 0;
-  const selectedVariant = hasVariants && selectedVariantIndex !== null ? variants[selectedVariantIndex] : null;
-
-  const baseUnitPrice = selectedVariant
-    ? Number(selectedVariant.price)
-    : productData?.price
+  const baseUnitPrice = productData?.price
     ? Number(productData.price)
     : parseInt(content.price_current || "950", 10) || 950;
 
   const subtotal = quantity * baseUnitPrice;
-
-  // Delivery calculation from app_settings
-  const insideFee = Number(rawSettings.delivery_charge_inside ?? 60);
-  const outsideFee = Number(rawSettings.delivery_charge_outside ?? 120);
-  const freeDeliveryMin = Number(rawSettings.free_delivery_min_order ?? 2000);
-  const isFreeDelivery = freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
-
-  const deliveryCharge = isFreeDelivery
-    ? 0
-    : deliveryArea === "inside"
-    ? insideFee
-    : outsideFee;
-
-  const grandTotal = subtotal + deliveryCharge;
+  const deliveryCharge = 0; // 100% Free delivery nationwide
+  const grandTotal = subtotal;
 
   // Form Inputs & Validation
   const [formData, setFormData] = useState({
@@ -438,11 +417,11 @@ export default function ShifaLandingPage() {
           name: formData.name.trim(),
           phone: cleanPhone,
           address: formData.address.trim(),
-          district: deliveryArea === "inside" ? "Dhaka" : "Outside Dhaka",
+          district: "বাংলাদেশ (ফ্রি ডেলিভারি)",
           quantity,
           unitPrice: baseUnitPrice,
-          deliveryCharge,
-          variant: selectedVariant?.name || "",
+          deliveryCharge: 0,
+          variant: "১ বোতল",
           productId: productData?.id || null,
         }),
       });
@@ -956,86 +935,52 @@ export default function ShifaLandingPage() {
           {/* White Card Body */}
           <div className="s-checkout-body">
             <form onSubmit={handleOrderSubmit}>
-              {/* Product Option & Package Selection */}
+              {/* Product Option - Single Bottle */}
               <div className="s-cf-group">
-                <h3 className="s-cf-heading">প্যাকেজ নির্বাচন করুন</h3>
-
-                {hasVariants ? (
-                  <div className="s-cf-variants-list">
-                    {variants.map((v: any, idx: number) => {
-                      const isSelected = selectedVariantIndex === idx;
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => {
-                            setSelectedVariantIndex(idx);
-                            setQuantity(1);
-                          }}
-                          className={`s-cf-variant-card ${isSelected ? "active" : ""}`}
-                        >
-                          <span className="s-cf-variant-name">
-                            <input
-                              type="radio"
-                              name="variant"
-                              checked={isSelected}
-                              onChange={() => {
-                                setSelectedVariantIndex(idx);
-                                setQuantity(1);
-                              }}
-                              className="s-cf-radio"
-                            />
-                            {v.name}
-                          </span>
-                          <span className="s-cf-variant-price">৳ {toBengaliDigits(v.price)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="s-cf-product">
-                    <input
-                      type="radio"
-                      checked
-                      readOnly
-                      className="s-cf-radio"
-                    />
-                    <img
-                      src={productData?.images?.[0] || "/images/product-bottle-main.png"}
-                      alt={content.product_name}
-                      className="s-cf-prod-img"
-                    />
-                    <div className="s-cf-prod-info">
-                      <span className="s-cf-prod-title">
-                        {productData?.name_primary || content.product_name}
-                      </span>
-                      <div className="s-cf-qty">
-                        <button
-                          type="button"
-                          className="s-cf-qty-btn"
-                          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="text"
-                          readOnly
-                          value={toBengaliDigits(quantity)}
-                          className="s-cf-qty-val"
-                        />
-                        <button
-                          type="button"
-                          className="s-cf-qty-btn"
-                          onClick={() => setQuantity((q) => q + 1)}
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="s-cf-prod-price">
-                        ৳ {toBengaliDigits(subtotal)}
-                      </div>
+                <h3 className="s-cf-heading">আপনার পণ্য</h3>
+                <div className="s-cf-product">
+                  <input
+                    type="radio"
+                    checked
+                    readOnly
+                    className="s-cf-radio"
+                  />
+                  <img
+                    src={productData?.images?.[0] || "/images/product-bottle-main.png"}
+                    alt={content.product_name}
+                    className="s-cf-prod-img"
+                  />
+                  <div className="s-cf-prod-info">
+                    <span className="s-cf-prod-title">
+                      {productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল (১ বোতল)"}
+                    </span>
+                    <div className="s-cf-qty">
+                      <button
+                        type="button"
+                        className="s-cf-qty-btn"
+                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                      >
+                        −
+                      </button>
+                      <input
+                        type="text"
+                        readOnly
+                        value={toBengaliDigits(quantity)}
+                        className="s-cf-qty-val"
+                      />
+                      <button
+                        type="button"
+                        className="s-cf-qty-btn"
+                        onClick={() => setQuantity((q) => q + 1)}
+                      >
+                        +
+                      </button>
+                    </div>
+                    <div className="s-cf-prod-price">
+                      ৳ {toBengaliDigits(subtotal)}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
 
               {/* Customer Info */}
@@ -1103,45 +1048,24 @@ export default function ShifaLandingPage() {
                 </div>
               </div>
 
-              {/* Delivery / Shipping Options */}
+              {/* Free Delivery Nationwide */}
               <div className="s-cf-group">
-                <h3 className="s-cf-heading">ডেলিভারি এরিয়া নির্ধারণ করুন</h3>
-                <div className="s-cf-shipping-grid">
-                  <label
-                    className={`s-cf-shipping-card ${deliveryArea === "inside" ? "active" : ""}`}
-                    onClick={() => setDeliveryArea("inside")}
-                  >
-                    <input
-                      type="radio"
-                      name="deliveryArea"
-                      checked={deliveryArea === "inside"}
-                      onChange={() => setDeliveryArea("inside")}
-                    />
-                    <div>
-                      <span className="s-cf-shipping-title">ঢাকার ভিতরে</span>
-                      <span className="s-cf-shipping-price">
-                        {isFreeDelivery ? "ফ্রি ডেলিভারি (৳০)" : `৳ ${toBengaliDigits(insideFee)}`}
-                      </span>
-                    </div>
-                  </label>
-
-                  <label
-                    className={`s-cf-shipping-card ${deliveryArea === "outside" ? "active" : ""}`}
-                    onClick={() => setDeliveryArea("outside")}
-                  >
-                    <input
-                      type="radio"
-                      name="deliveryArea"
-                      checked={deliveryArea === "outside"}
-                      onChange={() => setDeliveryArea("outside")}
-                    />
-                    <div>
-                      <span className="s-cf-shipping-title">ঢাকার বাইরে</span>
-                      <span className="s-cf-shipping-price">
-                        {isFreeDelivery ? "ফ্রি ডেলিভারি (৳০)" : `৳ ${toBengaliDigits(outsideFee)}`}
-                      </span>
-                    </div>
-                  </label>
+                <h3 className="s-cf-heading">ডেলিভারি মেথড</h3>
+                <div className="s-cf-shipping-row">
+                  <input
+                    type="radio"
+                    checked
+                    readOnly
+                    className="s-cf-radio"
+                  />
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
+                    <span style={{ fontWeight: 600, color: "#0E5A2E" }}>
+                      সারাদেশে ক্যাশ অন ফ্রি হোম ডেলিভারি
+                    </span>
+                    <span style={{ fontWeight: 700, fontSize: "14px", background: "#D6EBD3", color: "#08401F", padding: "4px 10px", borderRadius: "20px" }}>
+                      ১০০% ফ্রি ডেলিভারি (৳০)
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1158,9 +1082,7 @@ export default function ShifaLandingPage() {
                   <tbody>
                     <tr>
                       <td>
-                        {selectedVariant
-                          ? `${productData?.name_primary || content.product_name} (${selectedVariant.name})`
-                          : `${productData?.name_primary || content.product_name} × ${toBengaliDigits(quantity)}`}
+                        {productData?.name_primary || content.product_name} × {toBengaliDigits(quantity)}
                       </td>
                       <td className="val">
                         ৳ {toBengaliDigits(subtotal)}
@@ -1176,8 +1098,8 @@ export default function ShifaLandingPage() {
                     </tr>
                     <tr>
                       <th>ডেলিভারি চার্জ</th>
-                      <td className="val" style={{ color: deliveryCharge === 0 ? "#0E5A2E" : undefined }}>
-                        {deliveryCharge === 0 ? "ফ্রি ডেলিভারি" : `৳ ${toBengaliDigits(deliveryCharge)}`}
+                      <td className="val" style={{ color: "#0E5A2E", fontWeight: 700 }}>
+                        ফ্রি ডেলিভারি (৳০)
                       </td>
                     </tr>
                     <tr className="total">
@@ -1210,7 +1132,7 @@ export default function ShifaLandingPage() {
                   <span>অর্ডার প্রসেস হচ্ছে...</span>
                 ) : (
                   <span>
-                    অর্ডার কনফার্ম করুন - ৳ {toBengaliDigits(grandTotal)}
+                    অর্ডার কনফার্ম করুন - ৳ {toBengaliDigits(grandTotal)} (ফ্রি ডেলিভারি)
                   </span>
                 )}
               </button>
@@ -1256,7 +1178,7 @@ export default function ShifaLandingPage() {
               </p>
               <p className="flex justify-between pt-1 text-base font-bold text-[#0E5A2E]">
                 <span>মোট প্রদেয় বিল:</span>
-                <span>৳ {toBengaliDigits(orderSuccess.total)} (ক্যাশ অন ডেলিভারি)</span>
+                <span>৳ {toBengaliDigits(orderSuccess.total)} (ফ্রি হোম ডেলিভারি)</span>
               </p>
             </div>
 
