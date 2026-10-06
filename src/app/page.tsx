@@ -187,6 +187,12 @@ export default function ShifaLandingPage() {
       .catch((e) => console.log("Failed to load dynamic content:", e));
   }, []);
 
+  // Dynamic Product Bottle Image with Safe Fallback
+  const productMainImg =
+    productData?.images?.[0] && productData.images[0].trim() !== ""
+      ? productData.images[0]
+      : "/images/product-bottle-main.png";
+
   // ---- Dynamic Gallery Images ----
   const galleryImages =
     productData?.images && productData.images.length > 1
@@ -519,7 +525,10 @@ export default function ShifaLandingPage() {
             <div className="s-hero-img">
               <img
                 alt={content.hero_title}
-                src={productData?.images?.[0] || "/images/product-bottle-main.png"}
+                src={productMainImg}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "/images/product-bottle-main.png";
+                }}
                 loading="eager"
               />
             </div>
@@ -946,9 +955,12 @@ export default function ShifaLandingPage() {
                     className="s-cf-radio"
                   />
                   <img
-                    src={productData?.images?.[0] || "/images/product-bottle-main.png"}
+                    src={productMainImg}
                     alt={content.product_name}
                     className="s-cf-prod-img"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = "/images/product-bottle-main.png";
+                    }}
                   />
                   <div className="s-cf-prod-info">
                     <span className="s-cf-prod-title">
