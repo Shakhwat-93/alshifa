@@ -10,6 +10,7 @@ import {
   ArrowRight,
   Flame,
   Star,
+  ShoppingBag,
 } from "lucide-react";
 
 export default function HeroSection() {
@@ -74,26 +75,15 @@ export default function HeroSection() {
                 কালোজিরার তেল, ক্যাস্টর অয়েল, আদা ও আকন্দ পাতার বিশেষ নির্যাস ত্বকের গভীরে প্রবেশ করে দ্রুত রক্ত সঞ্চালন স্বাভাবিক করে এবং পেশীর আড়ষ্টতা দূর করে।
               </p>
 
-              {/* Price & Primary CTA */}
+              {/* Primary CTA */}
               <div className="space-y-3">
-                <div className="flex items-baseline gap-2.5 sm:gap-3">
-                  <span className="text-2xl sm:text-3xl lg:text-4xl font-black text-emerald-800 font-latin">
-                    ৳950
-                  </span>
-                  <span className="text-sm sm:text-base lg:text-lg text-stone-400 line-through font-latin">
-                    ৳1,450
-                  </span>
-                  <span className="text-xs sm:text-sm font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-0.5 rounded">
-                    ৳৫০০ সাশ্রয়
-                  </span>
-                </div>
-
                 <a
                   href="#order-section"
                   className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-extrabold text-sm sm:text-base lg:text-lg py-3.5 sm:py-4 lg:py-4.5 px-6 rounded-xl shadow-cta transition active:scale-[0.98] animate-cta-pulse cursor-pointer"
                 >
-                  <span>অর্ডার করতে এখানে ক্লিক করুন</span>
-                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <ShoppingBag className="w-5 h-5 shrink-0" />
+                  <span>অর্ডার করুন</span>
+                  <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
                 </a>
 
                 <p className="text-center text-[11px] sm:text-xs lg:text-sm text-stone-500 font-medium">
