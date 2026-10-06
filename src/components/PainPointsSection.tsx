@@ -1,5 +1,7 @@
-import React from "react";
-import { ArrowDown } from "lucide-react";
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import { ArrowDown, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react";
 
 const problems = [
   {
@@ -35,6 +37,48 @@ const problems = [
 ];
 
 export default function PainPointsSection() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
+
+  // Auto-slide on mobile every 3.5 seconds
+  useEffect(() => {
+    if (isPaused) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % problems.length);
+    }, 3500);
+    return () => clearInterval(timer);
+  }, [isPaused]);
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % problems.length);
+  };
+
+  const handlePrev = () => {
+    setCurrentIndex((prev) => (prev === 0 ? problems.length - 1 : prev - 1));
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    touchEndX.current = e.targetTouches[0].clientX;
+    setIsPaused(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const diff = touchStartX.current - touchEndX.current;
+    if (diff > 45) {
+      handleNext();
+    } else if (diff < -45) {
+      handlePrev();
+    }
+    setIsPaused(false);
+  };
+
   return (
     <section className="py-8 sm:py-14 md:py-16 lg:py-20 bg-[#f8f8f6] border-b border-stone-200/70">
       <div className="max-w-6xl xl:max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
@@ -54,8 +98,88 @@ export default function PainPointsSection() {
           </p>
         </div>
 
-        {/* Problems List - 1 col on mobile, 2 col on tablet, 3 col on desktop/large */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-6">
+        {/* ================= MOBILE SLIDER (sm:hidden) ================= */}
+        <div className="block sm:hidden">
+          <div
+            className="overflow-hidden relative touch-pan-y rounded-2xl"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+          >
+            <div
+              className="flex transition-transform duration-500 ease-in-out"
+              style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+            >
+              {problems.map((item, idx) => (
+                <div key={idx} className="w-full shrink-0 px-1">
+                  <div className="bg-white p-5 rounded-2xl border border-rose-200/90 shadow-soft flex flex-col justify-between min-h-[190px]">
+                    <div>
+                      <div className="flex items-center gap-3 mb-3">
+                        <span className="w-9 h-9 rounded-xl bg-rose-50 text-rose-700 flex items-center justify-center font-bold text-sm shrink-0 font-latin border border-rose-200 shadow-2xs">
+                          {item.num}
+                        </span>
+                        <h3 className="text-sm font-bold text-stone-900 leading-snug">
+                          {item.title}
+                        </h3>
+                      </div>
+                      <p className="text-xs text-stone-600 leading-relaxed font-normal">
+                        {item.desc}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-400 font-medium">
+                      <span className="text-rose-600 font-semibold flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        <span>দৈনন্দিন কষ্ট</span>
+                      </span>
+                      <span className="font-latin">{idx + 1} / {problems.length}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Slider Controls: Prev / Dots / Next */}
+          <div className="flex items-center justify-between mt-4 px-2">
+            <button
+              onClick={handlePrev}
+              aria-label="পূর্ববর্তী সমস্যা"
+              className="w-8 h-8 rounded-full bg-white hover:bg-rose-50 text-stone-700 hover:text-rose-700 border border-stone-200 flex items-center justify-center transition active:scale-95 shadow-2xs"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Dots */}
+            <div className="flex items-center gap-1.5">
+              {problems.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrentIndex(i)}
+                  aria-label={`সমস্যা ${i + 1}`}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    currentIndex === i
+                      ? "w-6 bg-rose-600"
+                      : "w-2 bg-stone-300 hover:bg-stone-400"
+                  }`}
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleNext}
+              aria-label="পরবর্তী সমস্যা"
+              className="w-8 h-8 rounded-full bg-white hover:bg-rose-50 text-stone-700 hover:text-rose-700 border border-stone-200 flex items-center justify-center transition active:scale-95 shadow-2xs"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* ================= DESKTOP & TABLET GRID (hidden sm:grid) ================= */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4 lg:gap-6">
           {problems.map((item, idx) => (
             <div
               key={idx}
