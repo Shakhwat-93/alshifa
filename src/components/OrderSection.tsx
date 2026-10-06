@@ -67,7 +67,6 @@ export default function OrderSection() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [shippingArea, setShippingArea] = useState("all-bd-free");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<OrderSuccessData | null>(null);
@@ -292,54 +291,6 @@ export default function OrderSection() {
                       {errors.address}
                     </p>
                   )}
-                </div>
-
-                {/* Shipping Area */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-bold text-stone-800 mb-1.5">
-                    ডেলিভারি এলাকা
-                  </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <label
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer text-xs sm:text-sm ${
-                        shippingArea === "dhaka"
-                          ? "border-emerald-600 bg-emerald-50/50"
-                          : "border-stone-200 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="shipping"
-                          checked={shippingArea === "dhaka"}
-                          onChange={() => setShippingArea("dhaka")}
-                          className="accent-emerald-700"
-                        />
-                        <span className="font-semibold text-stone-900">ঢাকার ভেতরে</span>
-                      </div>
-                      <span className="font-bold text-emerald-700">ফ্রি</span>
-                    </label>
-
-                    <label
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer text-xs sm:text-sm ${
-                        shippingArea === "all-bd-free"
-                          ? "border-emerald-600 bg-emerald-50/50"
-                          : "border-stone-200 bg-white"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="radio"
-                          name="shipping"
-                          checked={shippingArea === "all-bd-free"}
-                          onChange={() => setShippingArea("all-bd-free")}
-                          className="accent-emerald-700"
-                        />
-                        <span className="font-semibold text-stone-900">ঢাকার বাইরে</span>
-                      </div>
-                      <span className="font-bold text-emerald-700">ফ্রি</span>
-                    </label>
-                  </div>
                 </div>
               </div>
             </div>

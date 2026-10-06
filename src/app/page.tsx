@@ -3,19 +3,15 @@ import TopBar from "@/components/TopBar";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import PainPointsSection from "@/components/PainPointsSection";
-import RootCauseSection from "@/components/RootCauseSection";
 import FeaturesSection from "@/components/FeaturesSection";
 import IngredientsSection from "@/components/IngredientsSection";
-import TargetAudienceSection from "@/components/TargetAudienceSection";
 import UsageSection from "@/components/UsageSection";
 import CertificationSection from "@/components/CertificationSection";
 import UrgencySection from "@/components/UrgencySection";
 import ReviewsSection from "@/components/ReviewsSection";
-import FAQSection from "@/components/FAQSection";
 import OrderSection from "@/components/OrderSection";
 import FloatingStickyBar from "@/components/FloatingStickyBar";
 import WhatsAppWidget from "@/components/WhatsAppWidget";
-import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -32,44 +28,37 @@ export default function Home() {
       {/* 4. Pain Agitation Section (6 Real Daily Problems) */}
       <PainPointsSection />
 
-      {/* 5. Root Cause & Herbal Solution Explanation */}
-      <RootCauseSection />
-
-      {/* 6. Key Benefits & Physical Functions */}
+      {/* 5. Key Benefits & Physical Functions */}
       <FeaturesSection />
 
-      {/* 7. 27 Herbal Ingredients Showcase Banner & List */}
+      {/* 6. 27 Herbal Ingredients Showcase Banner & List */}
       <IngredientsSection />
 
-      {/* 8. Target Audience Personas */}
-      <TargetAudienceSection />
-
-      {/* 9. 3-Step Simple Usage Guide */}
+      {/* 7. 3-Step Simple Usage Guide */}
       <UsageSection />
 
-      {/* 10. Official Lab Test & Quality Certification */}
+      {/* 8. Official Lab Test & Quality Certification */}
       <CertificationSection />
 
-      {/* 11. Emotional Warning / Urgency Callout */}
+      {/* 9. Emotional Warning / Urgency Callout */}
       <UrgencySection />
 
-      {/* 12. Verified Customer Reviews & Testimonials */}
+      {/* 10. Verified Customer Reviews & Testimonials */}
       <ReviewsSection />
 
-      {/* 13. Frequently Asked Questions (FAQ Accordion) */}
-      <FAQSection />
-
-      {/* 14. High-Converting Checkout Order Form with Package Selector */}
+      {/* 11. High-Converting Checkout Order Form with Package Selector */}
       <OrderSection />
 
-      {/* 15. Mobile Sticky Bottom Action Bar */}
+      {/* 12. Mobile Sticky Bottom Action Bar */}
       <FloatingStickyBar />
 
-      {/* 16. Floating WhatsApp Direct Assistance Widget */}
+      {/* 13. Floating WhatsApp Direct Assistance Widget */}
       <WhatsAppWidget />
 
-      {/* 17. Agency-Level Footer */}
-      <Footer />
+      {/* 14. Clean Minimal Footer */}
+      <footer className="py-6 text-center text-xs text-stone-500 bg-[#f5f5f3] pb-24 sm:pb-8 border-t border-stone-200/60">
+        <p>© {new Date().getFullYear()} শিফা কেয়ার। সর্বস্বত্ব সংরক্ষিত।</p>
+      </footer>
     </main>
   );
 }
