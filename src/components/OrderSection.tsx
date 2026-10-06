@@ -298,10 +298,6 @@ export default function OrderSection() {
                   </>
                 )}
               </button>
-
-              <p className="text-center text-[11px] sm:text-xs text-stone-500 font-medium">
-                ✅ কোনো অগ্রিম টাকা লাগবে না • পণ্য হাতে পেয়ে দেখে টাকা দিবেন
-              </p>
             </div>
           </form>
         </div>
