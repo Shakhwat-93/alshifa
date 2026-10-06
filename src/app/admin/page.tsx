@@ -93,9 +93,7 @@ export default function EnterpriseAdmin() {
     | "products"
     | "inventory"
     | "courier"
-    | "inbox"
     | "landing"
-    | "pages"
     | "reports"
     | "users"
     | "settings"
@@ -113,10 +111,7 @@ export default function EnterpriseAdmin() {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [inventoryTx, setInventoryTx] = useState<any[]>([]);
-  const [chats, setChats] = useState<any[]>([]);
-  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [landingData, setLandingData] = useState<any>(null);
-  const [pagesList, setPagesList] = useState<any[]>([]);
   const [adminUsers, setAdminUsers] = useState<any[]>([]);
   const [settingsData, setSettingsData] = useState<any>({});
 
@@ -175,12 +170,6 @@ export default function EnterpriseAdmin() {
   const [stockAdjustType, setStockAdjustType] = useState("Stock In");
   const [stockAdjustRef, setStockAdjustRef] = useState("");
 
-  // ---------------- Live Chat / Inbox State ----------------
-  const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [replyMessage, setReplyMessage] = useState("");
-  const [isInternalNote, setIsInternalNote] = useState(false);
-  const [sendingMsg, setSendingMsg] = useState(false);
-
   // ---------------- Landing Builder State ----------------
   const [landingForm, setLandingForm] = useState({
     title: "",
@@ -210,15 +199,6 @@ export default function EnterpriseAdmin() {
     permissions: ["orders", "products"],
   });
 
-  // ---------------- Pages State ----------------
-  const [selectedPageSlug, setSelectedPageSlug] = useState("privacy-policy");
-  const [pageForm, setPageForm] = useState({
-    title_primary: "",
-    title_secondary: "",
-    content_primary: "",
-    content_secondary: "",
-  });
-  const [savingPage, setSavingPage] = useState(false);
 
   // ---------------- Reports State ----------------
   const [reportDateRange, setReportDateRange] = useState<"today" | "7d" | "30d" | "all">("30d");
@@ -283,9 +263,6 @@ export default function EnterpriseAdmin() {
         setProducts(data.products || []);
         setCategories(data.categories || []);
         setInventoryTx(data.inventory_transactions || []);
-        setChats(data.chats || []);
-        setChatMessages(data.chat_messages || []);
-        setPagesList(data.pages || []);
         setAdminUsers(data.users || []);
         setSettingsData(data.settings || {});
         setSettingsForm(data.settings || {});
@@ -304,11 +281,6 @@ export default function EnterpriseAdmin() {
             pixel_id: data.landing.pixel_id || "",
             capi_token: data.landing.capi_token || "",
           });
-        }
-
-        // Active chat default
-        if (data.chats && data.chats.length > 0 && !activeChatId) {
-          setActiveChatId(data.chats[0].id);
         }
 
         // Inventory spreadsheet drafts
@@ -567,33 +539,6 @@ export default function EnterpriseAdmin() {
     }
   };
 
-  // ==================== LIVE CHAT SEND ====================
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!replyMessage.trim() || !activeChatId) return;
-    setSendingMsg(true);
-    try {
-      const res = await fetch("/api/admin/inbox", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: activeChatId,
-          sender_name: currentUser?.username || "Admin Support",
-          message_body: replyMessage.trim(),
-          is_internal: isInternalNote,
-        }),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setChatMessages((prev) => [...prev, data.message]);
-        setReplyMessage("");
-        if (soundEnabled) playNotificationChime();
-      }
-    } finally {
-      setSendingMsg(false);
-    }
-  };
-
   // ==================== LANDING BUILDER SAVE ====================
   const handleSaveLanding = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -775,12 +720,10 @@ export default function EnterpriseAdmin() {
     { id: "products", label: "প্রোডাক্ট ক্যাটালগ", icon: Package },
     { id: "inventory", label: "ইনভেন্টরি লেজার", icon: Boxes },
     { id: "courier", label: "কুরিয়ার হাব", icon: Truck },
-    { id: "inbox", label: "লাইভ চ্যাট CRM", icon: MessageSquare, badge: chats.filter((c) => c.status === "pending").length },
     { id: "landing", label: "ল্যান্ডিং পেজ বিল্ডার", icon: Sparkles },
-    { id: "pages", label: "কনটেন্ট পেজ", icon: FileText },
     { id: "reports", label: "রিপোর্ট ও অ্যানালিটিক্স", icon: BarChart3 },
-    { id: "users", label: "টিম ও পারমিশন", icon: Users },
     { id: "settings", label: "গ্লোবাল সেটিংস", icon: Settings },
+    { id: "users", label: "টিম ও পারমিশন", icon: Users },
   ];
 
   return (
@@ -1722,152 +1665,6 @@ export default function EnterpriseAdmin() {
             </div>
           )}
 
-          {/* ===================== TAB: LIVE CHAT CRM (INBOX) ===================== */}
-          {activeTab === "inbox" && (
-            <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row h-[750px]">
-              {/* Panel 1: Chats List */}
-              <div className="w-full md:w-80 border-r border-gray-200 flex flex-col">
-                <div className="p-4 border-b border-gray-100">
-                  <h4 className="font-bold text-gray-900 text-sm">ইনবক্স চ্যাট সেশন</h4>
-                  <p className="text-[11px] text-gray-400">লাইভ কাস্টমার সাপোর্ট</p>
-                </div>
-                <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
-                  {chats.length === 0 ? (
-                    <div className="p-8 text-center text-gray-400 text-xs">কোনো চ্যাট সেশন নেই।</div>
-                  ) : (
-                    chats.map((chat) => (
-                      <button
-                        key={chat.id}
-                        onClick={() => setActiveChatId(chat.id)}
-                        className={`w-full p-3.5 text-left transition-colors flex items-start gap-3 ${
-                          activeChatId === chat.id ? "bg-orange-50/60" : "hover:bg-gray-50"
-                        }`}
-                      >
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#ff3f60] to-[#ff783e] text-white flex items-center justify-center font-bold text-xs shrink-0">
-                          {(chat.customer_name || "V")[0]}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs font-bold text-gray-900 truncate">
-                              {chat.customer_name || `ভিজিটর #${chat.visitor_id.slice(0, 6)}`}
-                            </p>
-                            <span className="text-[10px] text-gray-400">
-                              {new Date(chat.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                            </span>
-                          </div>
-                          <p className="text-[11px] text-gray-500 truncate mt-0.5">
-                            {chat.customer_phone || chat.department}
-                          </p>
-                        </div>
-                      </button>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Panel 2: Messages Stream & Reply */}
-              <div className="flex-1 flex flex-col bg-gray-50/30">
-                {/* Chat Top Header */}
-                <div className="h-14 px-5 border-b border-gray-200 bg-white flex items-center justify-between">
-                  <div>
-                    <h5 className="font-bold text-gray-900 text-xs">সরাসরি কথোপকথন</h5>
-                    <span className="text-[10px] text-emerald-600 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      রিয়েলটাইম কানেক্টেড
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => setIsInternalNote(!isInternalNote)}
-                      className={`text-xs px-2.5 py-1 rounded-lg font-semibold transition-colors ${
-                        isInternalNote ? "bg-amber-100 text-amber-800" : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {isInternalNote ? "📝 ইন্টারনাল নোট মোড" : "💬 পাবলিক রিপ্লাই"}
-                    </button>
-                  </div>
-                </div>
-
-                {/* Messages Container */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {chatMessages
-                    .filter((m) => m.chat_id === activeChatId)
-                    .map((msg) => (
-                      <div
-                        key={msg.id}
-                        className={`flex flex-col ${
-                          msg.sender_role === "customer"
-                            ? "items-start"
-                            : msg.sender_role === "internal_note"
-                            ? "items-center"
-                            : "items-end"
-                        }`}
-                      >
-                        {msg.sender_role === "internal_note" ? (
-                          <div className="max-w-md p-2.5 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs shadow-sm">
-                            <span className="font-bold block text-[10px] uppercase text-amber-700">টিম নোট:</span>
-                            {msg.body}
-                          </div>
-                        ) : (
-                          <div
-                            className={`max-w-md p-3 rounded-2xl text-xs shadow-sm ${
-                              msg.sender_role === "customer"
-                                ? "bg-white text-gray-800 border border-gray-200"
-                                : "bg-gradient-to-r from-[#ff3f60] to-[#ff783e] text-white"
-                            }`}
-                          >
-                            <p className="font-semibold text-[10px] opacity-80 mb-0.5">{msg.sender_name}</p>
-                            <p>{msg.body}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                </div>
-
-                {/* Canned Responses Toolbar */}
-                <div className="px-4 py-2 border-t border-gray-100 bg-white flex items-center gap-1.5 overflow-x-auto text-[11px]">
-                  <span className="text-gray-400 text-[10px] font-bold">কুইক রিপ্লাই:</span>
-                  <button
-                    onClick={() => setReplyMessage("ধন্যবাদ! আপনার অর্ডারটি নিশ্চিত করা হয়েছে।")}
-                    className="px-2 py-0.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap"
-                  >
-                    /অর্ডার কনফার্ম
-                  </button>
-                  <button
-                    onClick={() => setReplyMessage("আমাদের স্পেশাল অফারে মূল্য মাত্র ৯৫০ টাকা এবং সারাদেশে ফ্রি হোম ডেলিভারি।")}
-                    className="px-2 py-0.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap"
-                  >
-                    /মূল্য ও অফার
-                  </button>
-                  <button
-                    onClick={() => setReplyMessage("অনুগ্রহ করে আপনার সম্পূর্ণ নাম, মোবাইল নাম্বার এবং ঠিকানাটি দিন।")}
-                    className="px-2 py-0.5 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 whitespace-nowrap"
-                  >
-                    /ঠিকানা চান
-                  </button>
-                </div>
-
-                {/* Reply Input Form */}
-                <form onSubmit={handleSendMessage} className="p-3 border-t border-gray-200 bg-white flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={replyMessage}
-                    onChange={(e) => setReplyMessage(e.target.value)}
-                    placeholder={isInternalNote ? "টিমের জন্য ইন্টারনাল নোট লিখুন..." : "কাস্টমারকে উত্তর লিখুন..."}
-                    className="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#ff3f60] text-xs bg-gray-50/50"
-                  />
-                  <button
-                    type="submit"
-                    disabled={sendingMsg}
-                    className="p-2.5 rounded-xl bg-gradient-to-r from-[#ff3f60] to-[#ff783e] text-white hover:opacity-95 shadow-sm disabled:opacity-50"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-
           {/* ===================== TAB: SINGLE PRODUCT LANDING BUILDER ===================== */}
           {activeTab === "landing" && (
             <div className="space-y-6">
@@ -2248,15 +2045,6 @@ export default function EnterpriseAdmin() {
                       />
                       <span className="text-xs font-semibold text-gray-700">টপ অ্যানাউন্সমেন্ট বার চালু রাখুন</span>
                     </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={settingsForm.is_live_chat_active ?? true}
-                        onChange={(e) => setSettingsForm({ ...settingsForm, is_live_chat_active: e.target.checked })}
-                        className="rounded text-[#ff3f60] focus:ring-[#ff3f60]"
-                      />
-                      <span className="text-xs font-semibold text-gray-700">লাইভ চ্যাট উইজেট চালু রাখুন</span>
-                    </label>
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-gray-600 mb-1.5">অ্যানাউন্সমেন্ট টেক্সট</label>
@@ -2342,87 +2130,6 @@ export default function EnterpriseAdmin() {
                   </div>
                 </div>
               </form>
-            </div>
-          )}
-
-          {/* ===================== TAB: DYNAMIC CONTENT PAGES ===================== */}
-          {activeTab === "pages" && (
-            <div className="space-y-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-gray-900">ডায়নামিক কনটেন্ট পেজ</h3>
-                  <p className="text-xs text-gray-500">প্রাইভেসি পলিসি, রিটার্ন পলিসি ও শর্তাবলী</p>
-                </div>
-              </div>
-
-              <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
-                <div className="flex items-center gap-2 border-b border-gray-100 pb-3">
-                  {["privacy-policy", "terms-and-conditions", "return-policy"].map((slug) => (
-                    <button
-                      key={slug}
-                      onClick={() => {
-                        setSelectedPageSlug(slug);
-                        const p = pagesList.find((x) => x.slug === slug);
-                        if (p) {
-                          setPageForm({
-                            title_primary: p.title_primary || "",
-                            title_secondary: p.title_secondary || "",
-                            content_primary: p.content_primary || "",
-                            content_secondary: p.content_secondary || "",
-                          });
-                        }
-                      }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold capitalize ${
-                        selectedPageSlug === slug
-                          ? "bg-gradient-to-r from-[#ff3f60] to-[#ff783e] text-white"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {slug.replace(/-/g, " ")}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">পেজ শিরোনাম (বাংলা)</label>
-                    <input
-                      type="text"
-                      value={pageForm.title_primary}
-                      onChange={(e) => setPageForm({ ...pageForm, title_primary: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-600 mb-1.5">পেজের বিস্তারিত কনটেন্ট</label>
-                    <textarea
-                      rows={8}
-                      value={pageForm.content_primary}
-                      onChange={(e) => setPageForm({ ...pageForm, content_primary: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs leading-relaxed"
-                    />
-                  </div>
-                  <button
-                    onClick={async () => {
-                      setSavingPage(true);
-                      try {
-                        const res = await fetch("/api/admin/pages", {
-                          method: "PATCH",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({ slug: selectedPageSlug, ...pageForm }),
-                        });
-                        if (res.ok) alert("পেজ সফলভাবে সেভ হয়েছে!");
-                      } finally {
-                        setSavingPage(false);
-                      }
-                    }}
-                    disabled={savingPage}
-                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-[#ff3f60] to-[#ff783e] text-white text-xs font-semibold shadow-sm"
-                  >
-                    {savingPage ? "সেভ হচ্ছে..." : "পেজ আপডেট করুন"}
-                  </button>
-                </div>
-              </div>
             </div>
           )}
 
