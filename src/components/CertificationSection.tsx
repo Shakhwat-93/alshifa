@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { ShieldCheck, CheckCircle2 } from "lucide-react";
+import CountdownTimer from "@/components/CountdownTimer";
 
 export default function CertificationSection() {
   return (
@@ -19,7 +20,7 @@ export default function CertificationSection() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-12 border border-stone-200/80 shadow-soft max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8 lg:p-12 border border-stone-200/80 shadow-soft max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto mb-6 sm:mb-8">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-6 sm:gap-8 lg:gap-12 items-center">
             {/* Certificate Preview */}
             <div className="md:col-span-5 flex justify-center">
@@ -63,6 +64,11 @@ export default function CertificationSection() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Countdown Timer Under Certificate */}
+        <div className="max-w-md mx-auto">
+          <CountdownTimer />
         </div>
       </div>
     </section>

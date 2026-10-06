@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import {
   ShieldCheck,
@@ -9,31 +9,10 @@ import {
   Sparkles,
   ArrowRight,
   Flame,
-  Clock,
   Star,
 } from "lucide-react";
 
 export default function HeroSection() {
-  const [timeLeft, setTimeLeft] = useState({
-    hours: 5,
-    minutes: 42,
-    seconds: 18,
-  });
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 };
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 };
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 };
-        return { hours: 0, minutes: 0, seconds: 0 };
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const formatNum = (n: number) => n.toString().padStart(2, "0");
-
   return (
     <section className="pt-4 pb-8 sm:pt-8 sm:pb-14 md:py-16 lg:py-20 bg-white border-b border-stone-200/70">
       <div className="max-w-7xl 2xl:max-w-[1536px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12">
@@ -94,36 +73,6 @@ export default function HeroSection() {
               <p className="text-xs sm:text-sm md:text-base text-stone-600 mb-4 sm:mb-6 leading-relaxed">
                 কালোজিরার তেল, ক্যাস্টর অয়েল, আদা ও আকন্দ পাতার বিশেষ নির্যাস ত্বকের গভীরে প্রবেশ করে দ্রুত রক্ত সঞ্চালন স্বাভাবিক করে এবং পেশীর আড়ষ্টতা দূর করে।
               </p>
-
-              {/* Countdown Timer */}
-              <div className="bg-white border border-stone-200 rounded-xl p-3 sm:p-4 mb-4 sm:mb-6">
-                <div className="flex items-center justify-between text-[11px] sm:text-xs text-stone-500 mb-2">
-                  <span className="font-semibold text-emerald-800 flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> অফার শেষ হতে বাকি:
-                  </span>
-                  <span className="text-red-600 font-bold">আজ রাত ১২টা পর্যন্ত</span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 sm:gap-3 text-center">
-                  <div className="bg-stone-900 text-white rounded-lg py-2 px-2 sm:px-3">
-                    <div className="text-base sm:text-xl lg:text-2xl font-black font-latin">
-                      {formatNum(timeLeft.hours)}
-                    </div>
-                    <div className="text-[9px] sm:text-xs text-stone-400">ঘণ্টা</div>
-                  </div>
-                  <div className="bg-stone-900 text-white rounded-lg py-2 px-2 sm:px-3">
-                    <div className="text-base sm:text-xl lg:text-2xl font-black font-latin">
-                      {formatNum(timeLeft.minutes)}
-                    </div>
-                    <div className="text-[9px] sm:text-xs text-stone-400">মিনিট</div>
-                  </div>
-                  <div className="bg-stone-900 text-white rounded-lg py-2 px-2 sm:px-3">
-                    <div className="text-base sm:text-xl lg:text-2xl font-black text-amber-400 font-latin">
-                      {formatNum(timeLeft.seconds)}
-                    </div>
-                    <div className="text-[9px] sm:text-xs text-amber-400">সেকেন্ড</div>
-                  </div>
-                </div>
-              </div>
 
               {/* Price & Primary CTA */}
               <div className="space-y-3">
