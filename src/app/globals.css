@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla:ital@0;1&display=swap');
 @import "tailwindcss";
 
 @layer base {
@@ -38,6 +39,31 @@
 
 .font-latin {
   font-family: system-ui, -apple-system, sans-serif;
+}
+
+.font-tiro {
+  font-family: "Tiro Bangla", sans-serif !important;
+}
+
+/* Complete Admin Panel Typography Override for Tiro Bangla */
+.admin-tiro,
+.admin-tiro *,
+.admin-tiro input,
+.admin-tiro select,
+.admin-tiro textarea,
+.admin-tiro button,
+.admin-tiro table,
+.admin-tiro th,
+.admin-tiro td,
+.admin-tiro p,
+.admin-tiro span,
+.admin-tiro h1,
+.admin-tiro h2,
+.admin-tiro h3,
+.admin-tiro h4,
+.admin-tiro h5,
+.admin-tiro h6 {
+  font-family: "Tiro Bangla", sans-serif !important;
 }
 
 /* Layered soft shadows */

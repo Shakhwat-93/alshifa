@@ -784,7 +784,7 @@ export default function EnterpriseAdmin() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] flex text-gray-800 font-sans">
+    <div className="min-h-screen bg-[#f8f9fa] flex text-gray-800 font-tiro">
       {/* ===================== SIDEBAR ===================== */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 bg-white border-r border-gray-200 transition-all duration-300 flex flex-col ${
