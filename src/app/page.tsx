@@ -21,32 +21,32 @@ export default function Home() {
       {/* 2. Header with Logo & Quick Order */}
       <Header />
 
-      {/* 3. Hero Section with Price, Timer, Product Packshot & CTAs */}
+      {/* 3. Hero Section with Product Packshot & CTAs */}
       <HeroSection />
 
       {/* 4. Pain Agitation Section (6 Real Daily Problems) */}
       <PainPointsSection />
 
-      {/* 5. Key Benefits & Physical Functions */}
+      {/* 5. High-Converting Checkout Order Form with Package Selector */}
+      <OrderSection />
+
+      {/* 6. Key Benefits & Physical Functions */}
       <FeaturesSection />
 
-      {/* 6. 27 Herbal Ingredients Showcase Banner & List */}
+      {/* 7. 27 Herbal Ingredients Showcase Banner & List */}
       <IngredientsSection />
 
-      {/* 7. 3-Step Simple Usage Guide */}
+      {/* 8. 3-Step Simple Usage Guide */}
       <UsageSection />
 
-      {/* 8. Official Lab Test & Quality Certification */}
+      {/* 9. Official Lab Test & Quality Certification with Countdown Timer */}
       <CertificationSection />
-
-      {/* 9. Emotional Warning / Urgency Callout */}
-      <UrgencySection />
 
       {/* 10. Verified Customer Reviews & Testimonials */}
       <ReviewsSection />
 
-      {/* 11. High-Converting Checkout Order Form with Package Selector */}
-      <OrderSection />
+      {/* 11. Emotional Warning / Final Urgency Callout */}
+      <UrgencySection />
 
       {/* 12. Floating WhatsApp Direct Assistance Widget */}
       <WhatsAppWidget />
