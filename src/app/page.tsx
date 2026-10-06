@@ -28,7 +28,7 @@ const GALLERY_IMAGES = [
   },
 ];
 
-const REVIEWS = [
+const DEFAULT_REVIEWS = [
   {
     id: 1,
     name: "রহিমা খাতুন",
@@ -84,6 +84,62 @@ const INGREDIENTS = [
 ];
 
 export default function ShifaLandingPage() {
+  // ---- Dynamic Editable Content from Supabase ----
+  const [content, setContent] = useState<Record<string, string>>({
+    hero_tag: "Natural Care, Everyday Comfort",
+    hero_title: "শিফা পেইন কেয়ার অয়েল",
+    hero_subtitle: "প্রকৃতির ছোঁয়ায় ব্যথা নিরাময়ের বিশ্বস্ত সঙ্গী",
+    hero_intro:
+      "শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে আরামদায়ক অনুভূতি পেতে এটি ব্যবহার করা যেতে পারে।",
+    product_name: "Shifa Pain Care Oil",
+    price_current: "950",
+    price_regular: "1450",
+    shipping_text: "ফ্রী ডেলিভারী",
+    hotline_number: "+8809638014666",
+    timer_hours: "5",
+    badge_1: "শরীরের ব্যথা নিরাময়ে তেল",
+    badge_2: "২৭টি ভেষজ প্রাকৃতিক উপাদানে তৈরি",
+    badge_3: "পরিবেশবান্ধব",
+    intro_heading: "পণ্যের পরিচিতি",
+    intro_text:
+      "শিফা পেইন কেয়ার অয়েল হলো ম্যাসাজের জন্য তৈরি একটি পেইন-রিলিফ অয়েল। শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে আরামদায়ক অনুভূতি পেতে এটি ব্যবহার করা যেতে পারে।",
+    ingredients_heading: "উপাদান সমূহ",
+    highlight_title: "🌿 Shifa Pain Care Oil",
+    highlight_subtitle:
+      "২৭টি দুর্লভ ও মূল্যবান ভেষজ প্রাকৃতিক উপাদানের সমন্বয়ে তৈরি।",
+    usage_heading: "ব্যবহারের নিয়ম",
+    usage_text:
+      "প্রয়োজনীয় পরিমাণ তেল ব্যথাযুক্ত বা অস্বস্তিকর স্থানে নিয়ে ৫-১০ মিনিট হালকা হাতে ম্যাসাজ করুন। প্রয়োজন অনুযায়ী দিনে ২-৩ বার ব্যবহার করা যেতে পারে।",
+    cert_heading: "আমাদের সার্টিফিকেশন",
+    timer_heading: "অফার টি শেষ হতে বাকি আছে আর মাত্র",
+    final_cta_heading: "আজই অর্ডার করুন শিফা পেইন কেয়ার অয়েল",
+  });
+
+  const [reviewsList, setReviewsList] = useState(DEFAULT_REVIEWS);
+
+  // Fetch dynamic content from Supabase
+  useEffect(() => {
+    fetch("/api/content")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.settings && Object.keys(data.settings).length > 0) {
+          setContent((prev) => ({ ...prev, ...data.settings }));
+        }
+        if (data.reviews && data.reviews.length > 0) {
+          setReviewsList(
+            data.reviews.map((r: any) => ({
+              id: r.id,
+              name: r.name,
+              location: r.location,
+              image: r.image_url || "/images/review-rahima-khatun.avif",
+              text: r.review_text,
+            }))
+          );
+        }
+      })
+      .catch((e) => console.log("Failed to load content:", e));
+  }, []);
+
   // ---- Smooth scroll to checkout ----
   const scrollToCheckout = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
@@ -140,7 +196,7 @@ export default function ShifaLandingPage() {
     return () => window.removeEventListener("resize", updatePerView);
   }, []);
 
-  const maxRevIndex = Math.max(0, REVIEWS.length - perView);
+  const maxRevIndex = Math.max(0, reviewsList.length - perView);
 
   const nextRev = useCallback(() => {
     setRevIndex((prev) => (prev >= maxRevIndex ? 0 : prev + 1));
@@ -171,12 +227,13 @@ export default function ShifaLandingPage() {
     }
   };
 
-  // ---- Countdown Timer (5 hours persistent) ----
-  const [timeLeft, setTimeLeft] = useState({ d: 0, h: 5, m: 0, s: 0 });
+  // ---- Countdown Timer (Persistent hours from settings) ----
+  const timerHours = parseInt(content.timer_hours || "5", 10) || 5;
+  const [timeLeft, setTimeLeft] = useState({ d: 0, h: timerHours, m: 0, s: 0 });
 
   useEffect(() => {
     const KEY = "shifa_offer_end";
-    const DUR = 5 * 60 * 60 * 1000;
+    const DUR = timerHours * 60 * 60 * 1000;
     let end: number;
 
     try {
@@ -214,12 +271,11 @@ export default function ShifaLandingPage() {
     tick();
     const interval = setInterval(tick, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [timerHours]);
 
   // ---- Order Form State ----
   const [quantity, setQuantity] = useState(1);
-  const unitPrice = 950;
-  const regularPrice = 1450;
+  const unitPrice = parseInt(content.price_current || "950", 10) || 950;
   const totalPrice = quantity * unitPrice;
 
   const [formData, setFormData] = useState({
@@ -257,31 +313,51 @@ export default function ShifaLandingPage() {
     return Object.keys(err).length === 0;
   };
 
-  const handleOrderSubmit = (e: React.FormEvent) => {
+  const handleOrderSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
 
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      const id = "SHIFA-" + Math.floor(100000 + Math.random() * 900000);
-      setOrderSuccess({
-        orderId: id,
-        name: formData.name,
-        phone: formData.phone,
-        address: formData.address,
-        quantity,
-        total: totalPrice,
+    try {
+      const res = await fetch("/api/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          quantity,
+          unitPrice,
+        }),
       });
 
-      try {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setOrderSuccess({
+          orderId: data.order.order_id,
+          name: data.order.customer_name,
+          phone: data.order.customer_phone,
+          address: data.order.customer_address,
+          quantity: data.order.quantity,
+          total: data.order.total_price,
         });
-      } catch {}
-    }, 700);
+
+        try {
+          confetti({
+            particleCount: 110,
+            spread: 75,
+            origin: { y: 0.6 },
+          });
+        } catch {}
+      } else {
+        alert(data.error || "অর্ডার প্রসেস করা সম্ভব হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      }
+    } catch (err) {
+      alert("সার্ভার কানেকশন এরর। অনুগ্রহ করে আবার চেষ্টা করুন।");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -295,12 +371,10 @@ export default function ShifaLandingPage() {
           {/* HERO */}
           <section className="s-hero">
             <div className="s-hero-txt">
-              <span className="s-tag">Natural Care, Everyday Comfort</span>
-              <h1>শিফা পেইন কেয়ার অয়েল</h1>
-              <p className="s-sub">প্রকৃতির ছোঁয়ায় ব্যথা নিরাময়ের বিশ্বস্ত সঙ্গী</p>
-              <p className="s-intro">
-                শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে আরামদায়ক অনুভূতি পেতে এটি ব্যবহার করা যেতে পারে।
-              </p>
+              <span className="s-tag">{content.hero_tag}</span>
+              <h1>{content.hero_title}</h1>
+              <p className="s-sub">{content.hero_subtitle}</p>
+              <p className="s-intro">{content.hero_intro}</p>
               <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
                 <svg fill="none" viewBox="0 0 24 24">
                   <path
@@ -318,7 +392,7 @@ export default function ShifaLandingPage() {
             </div>
             <div className="s-hero-img">
               <img
-                alt="শিফা পেইন কেয়ার অয়েল বোতল"
+                alt={content.hero_title}
                 src="/images/product-bottle-main.png"
                 loading="eager"
               />
@@ -388,7 +462,7 @@ export default function ShifaLandingPage() {
                   <path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5" />
                 </svg>
               </span>
-              <b>শরীরের ব্যথা নিরাময়ে তেল</b>
+              <b>{content.badge_1}</b>
             </div>
             <div className="s-badge">
               <span className="s-ico a-sway">
@@ -397,7 +471,7 @@ export default function ShifaLandingPage() {
                   <path d="M5 19l7-7" />
                 </svg>
               </span>
-              <b>২৭টি ভেষজ প্রাকৃতিক উপাদানে তৈরি</b>
+              <b>{content.badge_2}</b>
             </div>
             <div className="s-badge">
               <span className="s-ico a-spin">
@@ -410,7 +484,7 @@ export default function ShifaLandingPage() {
                   <path d="M3 15.5L5 19h3" />
                 </svg>
               </span>
-              <b>পরিবেশবান্ধব</b>
+              <b>{content.badge_3}</b>
             </div>
           </div>
 
@@ -425,11 +499,9 @@ export default function ShifaLandingPage() {
                     <path d="M12 7.5v.5" />
                   </svg>
                 </span>
-                <h2>পণ্যের পরিচিতি</h2>
+                <h2>{content.intro_heading}</h2>
               </div>
-              <p className="s-text">
-                শিফা পেইন কেয়ার অয়েল হলো ম্যাসাজের জন্য তৈরি একটি পেইন-রিলিফ অয়েল। শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে আরামদায়ক অনুভূতি পেতে এটি ব্যবহার করা যেতে পারে।
-              </p>
+              <p className="s-text">{content.intro_text}</p>
             </div>
           </section>
 
@@ -442,7 +514,7 @@ export default function ShifaLandingPage() {
                   <path d="M5 19l7-7" />
                 </svg>
               </span>
-              <h2>উপাদান সমূহ</h2>
+              <h2>{content.ingredients_heading}</h2>
             </div>
             <ul className="s-ing">
               {INGREDIENTS.map((ing, i) => (
@@ -461,8 +533,8 @@ export default function ShifaLandingPage() {
               ))}
             </ul>
             <div className="s-hl">
-              <b>🌿 Shifa Pain Care Oil</b>
-              <p>২৭টি দুর্লভ ও মূল্যবান ভেষজ প্রাকৃতিক উপাদানের সমন্বয়ে তৈরি।</p>
+              <b>{content.highlight_title}</b>
+              <p>{content.highlight_subtitle}</p>
             </div>
           </section>
 
@@ -476,11 +548,9 @@ export default function ShifaLandingPage() {
                     <path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5" />
                   </svg>
                 </span>
-                <h2>ব্যবহারের নিয়ম</h2>
+                <h2>{content.usage_heading}</h2>
               </div>
-              <p className="s-text">
-                প্রয়োজনীয় পরিমাণ তেল ব্যথাযুক্ত বা অস্বস্তিকর স্থানে নিয়ে ৫-১০ মিনিট হালকা হাতে ম্যাসাজ করুন। প্রয়োজন অনুযায়ী দিনে ২-৩ বার ব্যবহার করা যেতে পারে।
-              </p>
+              <p className="s-text">{content.usage_text}</p>
             </div>
           </section>
 
@@ -494,7 +564,7 @@ export default function ShifaLandingPage() {
                   <path d="M8.5 14l-1.5 7 5-2.5 5 2.5-1.5-7" />
                 </svg>
               </span>
-              <h2>আমাদের সার্টিফিকেশন</h2>
+              <h2>{content.cert_heading}</h2>
             </div>
             <div className="s-cert">
               <img
@@ -508,8 +578,8 @@ export default function ShifaLandingPage() {
           {/* MID CTA */}
           <div className="s-mid">
             <p>
-              শিফা পেইন কেয়ার অয়েল
-              <small>প্রকৃতির ছোঁয়ায় ব্যথা নিরাময়ের বিশ্বস্ত সঙ্গী</small>
+              {content.hero_title}
+              <small>{content.hero_subtitle}</small>
             </p>
             <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
               <svg fill="none" viewBox="0 0 24 24">
@@ -566,7 +636,7 @@ export default function ShifaLandingPage() {
                     transition: "transform .55s ease",
                   }}
                 >
-                  {REVIEWS.map((rev) => (
+                  {reviewsList.map((rev) => (
                     <div key={rev.id} className="s-rev">
                       <div className="s-rev-in">
                         <svg className="s-quote" viewBox="0 0 24 24">
@@ -616,7 +686,7 @@ export default function ShifaLandingPage() {
 
           {/* TIMER */}
           <div className="s-timer">
-            <h3>অফার টি শেষ হতে বাকি আছে আর মাত্র</h3>
+            <h3>{content.timer_heading}</h3>
             <div className="s-tboxes">
               <div className="s-tbox">
                 <b className="t-d">{toBengaliDigits(timeLeft.d)}</b>
@@ -640,7 +710,7 @@ export default function ShifaLandingPage() {
 
         {/* ---------- FINAL CTA SECTION ---------- */}
         <section className="s-final">
-          <h2>আজই অর্ডার করুন শিফা পেইন কেয়ার অয়েল</h2>
+          <h2>{content.final_cta_heading}</h2>
           <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
             <svg fill="none" viewBox="0 0 24 24">
               <path
@@ -656,11 +726,11 @@ export default function ShifaLandingPage() {
             এখনই অর্ডার করুন
           </a>
           <div>
-            <a className="s-call" href="tel:+8809638014666">
+            <a className="s-call" href={`tel:${content.hotline_number}`}>
               <svg viewBox="0 0 24 24">
                 <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
               </svg>
-              Hotline: +8809638014666
+              Hotline: {content.hotline_number}
             </a>
           </div>
         </section>
@@ -697,11 +767,11 @@ export default function ShifaLandingPage() {
                   />
                   <img
                     src="/images/product-bottle-main.png"
-                    alt="Shifa Pain Care Oil"
+                    alt={content.product_name}
                     className="s-cf-prod-img"
                   />
                   <div className="s-cf-prod-info">
-                    <span className="s-cf-prod-title">Shifa Pain Care Oil</span>
+                    <span className="s-cf-prod-title">{content.product_name}</span>
                     <div className="s-cf-qty">
                       <button
                         type="button"
@@ -797,7 +867,7 @@ export default function ShifaLandingPage() {
                     readOnly
                     className="s-cf-radio"
                   />
-                  <span>ফ্রী ডেলিভারী</span>
+                  <span>{content.shipping_text}</span>
                 </div>
               </div>
 
@@ -814,7 +884,7 @@ export default function ShifaLandingPage() {
                   <tbody>
                     <tr>
                       <td>
-                        Shifa Pain Care Oil × {toBengaliDigits(quantity)}
+                        {content.product_name} × {toBengaliDigits(quantity)}
                       </td>
                       <td className="val">
                         ৳ {toBengaliDigits(totalPrice)}
@@ -831,7 +901,7 @@ export default function ShifaLandingPage() {
                     <tr>
                       <th>Shipment</th>
                       <td className="val" style={{ color: "#0E5A2E" }}>
-                        ফ্রী ডেলিভারী
+                        {content.shipping_text}
                       </td>
                     </tr>
                     <tr className="total">
