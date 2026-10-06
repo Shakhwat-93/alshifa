@@ -1,28 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Hind_Siliguri, Noto_Sans_Bengali, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import "./shifa.css";
-
-const hindSiliguri = Hind_Siliguri({
-  weight: ["400", "500", "600", "700"],
-  subsets: ["bengali"],
-  variable: "--font-hind-siliguri",
-  display: "swap",
-});
-
-const notoBengali = Noto_Sans_Bengali({
-  weight: ["400", "500", "600", "700", "800"],
-  subsets: ["bengali"],
-  variable: "--font-bengali",
-  display: "swap",
-});
-
-const plusJakarta = Plus_Jakarta_Sans({
-  weight: ["400", "500", "600", "700", "800"],
-  subsets: ["latin"],
-  variable: "--font-latin",
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://shifabd.online"),
@@ -68,10 +46,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="bn"
-      className={`${hindSiliguri.variable} ${notoBengali.variable} ${plusJakarta.variable} scroll-smooth antialiased`}
-    >
+    <html lang="bn" className="scroll-smooth antialiased">
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body className="min-h-screen bg-[#ffffff] text-[#1E2B22] selection:bg-emerald-100 selection:text-emerald-900 font-hind">
         {children}
       </body>
