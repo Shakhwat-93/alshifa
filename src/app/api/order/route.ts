@@ -1,6 +1,28 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 
+function normalizeBDPhone(phone: any): string {
+  const bnToEn: Record<string, string> = {
+    "০": "0",
+    "১": "1",
+    "২": "2",
+    "৩": "3",
+    "৪": "4",
+    "৫": "5",
+    "৬": "6",
+    "৭": "7",
+    "৮": "8",
+    "৯": "9",
+  };
+  let cleaned = String(phone || "")
+    .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+    .replace(/[^0-9]/g, "");
+  if (cleaned.startsWith("880")) {
+    cleaned = cleaned.slice(2);
+  }
+  return cleaned;
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -24,10 +46,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const cleanPhone = String(phone).replace(/\s+/g, "");
+    const cleanPhone = normalizeBDPhone(phone);
     if (!/^01[3-9]\d{8}$/.test(cleanPhone)) {
       return NextResponse.json(
-        { error: "সঠিক ১১ ডিজিটের মোবাইল নাম্বার লিখুন।" },
+        { error: "অনুগ্রহ করে সঠিক ১১ ডিজিটের মোবাইল নাম্বার লিখুন (যেমন: 017XXXXXXXX)।" },
         { status: 400 }
       );
     }

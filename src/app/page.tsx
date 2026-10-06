@@ -13,7 +13,22 @@ function padZero(num: number): string {
   return num < 10 ? `0${num}` : `${num}`;
 }
 
-const GALLERY_IMAGES = [
+// Bengali and English phone number normalizer
+function normalizeBDPhone(phone: any): string {
+  const bnToEn: Record<string, string> = {
+    "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+    "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+  };
+  let cleaned = String(phone || "")
+    .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+    .replace(/[^0-9]/g, "");
+  if (cleaned.startsWith("880")) {
+    cleaned = cleaned.slice(2);
+  }
+  return cleaned;
+}
+
+const DEFAULT_GALLERY = [
   {
     src: "/images/natural-pain-relief-promise.png",
     alt: "শিফা পেইন কেয়ার অয়েল",
@@ -66,7 +81,7 @@ const DEFAULT_REVIEWS = [
   },
 ];
 
-const INGREDIENTS = [
+const DEFAULT_INGREDIENTS = [
   { name: "ক্যাস্টর অয়েল", type: "drop" },
   { name: "আদার দ্রবণীয় নির্যাস", type: "leaf" },
   { name: "রসুনের দ্রবণীয় নির্যাস", type: "leaf" },
@@ -84,22 +99,23 @@ const INGREDIENTS = [
 ];
 
 export default function ShifaLandingPage() {
-  // ---- Dynamic Editable Content from Supabase ----
+  // ---- Dynamic Editable State from Supabase ----
   const [content, setContent] = useState<Record<string, string>>({
     hero_tag: "Natural Care, Everyday Comfort",
     hero_title: "শিফা পেইন কেয়ার অয়েল",
     hero_subtitle: "প্রকৃতির ছোঁয়ায় ব্যথা নিরাময়ের বিশ্বস্ত সঙ্গী",
     hero_intro:
       "শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে আরামদায়ক অনুভূতি পেতে এটি ব্যবহার করা যেতে পারে।",
-    product_name: "Shifa Pain Care Oil",
+    product_name: "শিফা পেইন কেয়ার অয়েল",
     price_current: "950",
     price_regular: "1450",
     shipping_text: "ফ্রী ডেলিভারী",
-    hotline_number: "+8809638014666",
+    hotline_number: "01886367377",
+    whatsapp_number: "01886367377",
     timer_hours: "5",
     badge_1: "শরীরের ব্যথা নিরাময়ে তেল",
     badge_2: "২৭টি ভেষজ প্রাকৃতিক উপাদানে তৈরি",
-    badge_3: "পরিবেশবান্ধব",
+    badge_3: "পরিবেশবান্ধব ও নিরাপদ",
     intro_heading: "পণ্যের পরিচিতি",
     intro_text:
       "শিফা পেইন কেয়ার অয়েল হলো ম্যাসাজের জন্য তৈরি একটি পেইন-রিলিফ অয়েল। শরীরের বিভিন্ন অংশে ব্যথা, পেশীর অস্বস্তি ও ক্লান্তির সময় ম্যাসাজের মাধ্যমে আরামদায়ক অনুভূতি পেতে এটি ব্যবহার করা যেতে পারে।",
@@ -115,30 +131,70 @@ export default function ShifaLandingPage() {
     final_cta_heading: "আজই অর্ডার করুন শিফা পেইন কেয়ার অয়েল",
   });
 
-  const [reviewsList, setReviewsList] = useState(DEFAULT_REVIEWS);
+  const [rawSettings, setRawSettings] = useState<any>({
+    delivery_charge_inside: 60,
+    delivery_charge_outside: 120,
+    free_delivery_min_order: 2000,
+    announcement_text: "🌿 সীমিত সময়ের অফার! আজই অর্ডার করুন এবং উপভোগ করুন ফ্রি হোম ডেলিভারি।",
+    is_announcement_active: true,
+    hotline_number: "01886367377",
+    whatsapp_number: "01886367377",
+    whatsapp_default_message: "হ্যালো, আমি আল-শিফা ন্যাচারাল অয়েল সম্পর্কে জানতে চাই।",
+  });
 
-  // Fetch dynamic content from Supabase
+  const [productData, setProductData] = useState<any>(null);
+  const [landingData, setLandingData] = useState<any>(null);
+  const [reviewsList, setReviewsList] = useState(DEFAULT_REVIEWS);
+  const [featuresList, setFeaturesList] = useState<any[]>([]);
+  const [faqList, setFaqList] = useState<any[]>([]);
+  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  // ---- Fetch Dynamic Content from Supabase ----
   useEffect(() => {
     fetch("/api/content")
       .then((res) => res.json())
       .then((data) => {
+        if (data.raw_settings) {
+          setRawSettings(data.raw_settings);
+        }
         if (data.settings && Object.keys(data.settings).length > 0) {
           setContent((prev) => ({ ...prev, ...data.settings }));
+        }
+        if (data.product) {
+          setProductData(data.product);
+        }
+        if (data.landing) {
+          setLandingData(data.landing);
         }
         if (data.reviews && data.reviews.length > 0) {
           setReviewsList(
             data.reviews.map((r: any, idx: number) => ({
               id: r.id || idx + 1,
-              name: r.name,
+              name: r.name || "সম্মানিত গ্রাহক",
               location: r.location || "বাংলাদেশ",
               image: r.image_url || r.image || "/images/review-rahima-khatun.avif",
-              text: r.review_text || r.review || "",
+              text: r.review || r.review_text || "",
             }))
           );
         }
+        if (data.features && data.features.length > 0) {
+          setFeaturesList(data.features);
+        }
+        if (data.faq && data.faq.length > 0) {
+          setFaqList(data.faq);
+        }
       })
-      .catch((e) => console.log("Failed to load content:", e));
+      .catch((e) => console.log("Failed to load dynamic content:", e));
   }, []);
+
+  // ---- Dynamic Gallery Images ----
+  const galleryImages =
+    productData?.images && productData.images.length > 1
+      ? productData.images.map((img: string, i: number) => ({
+          src: img,
+          alt: `${content.product_name} ছবি ${i + 1}`,
+        }))
+      : DEFAULT_GALLERY;
 
   // ---- Smooth scroll to checkout ----
   const scrollToCheckout = (e?: React.MouseEvent) => {
@@ -154,12 +210,12 @@ export default function ShifaLandingPage() {
   const galTouchStart = useRef<number>(0);
 
   const nextGal = useCallback(() => {
-    setGalIndex((prev) => (prev + 1) % GALLERY_IMAGES.length);
-  }, []);
+    setGalIndex((prev) => (prev + 1) % galleryImages.length);
+  }, [galleryImages.length]);
 
   const prevGal = useCallback(() => {
-    setGalIndex((prev) => (prev - 1 + GALLERY_IMAGES.length) % GALLERY_IMAGES.length);
-  }, []);
+    setGalIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  }, [galleryImages.length]);
 
   useEffect(() => {
     const timer = setInterval(nextGal, 3400);
@@ -273,11 +329,39 @@ export default function ShifaLandingPage() {
     return () => clearInterval(interval);
   }, [timerHours]);
 
-  // ---- Order Form State ----
+  // ---- Dynamic Order Form & Pricing Calculation ----
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number | null>(null);
   const [quantity, setQuantity] = useState(1);
-  const unitPrice = parseInt(content.price_current || "950", 10) || 950;
-  const totalPrice = quantity * unitPrice;
+  const [deliveryArea, setDeliveryArea] = useState<"inside" | "outside">("inside");
 
+  // Determine current unit price & variant name
+  const variants = productData?.variants || [];
+  const hasVariants = Array.isArray(variants) && variants.length > 0;
+  const selectedVariant = hasVariants && selectedVariantIndex !== null ? variants[selectedVariantIndex] : null;
+
+  const baseUnitPrice = selectedVariant
+    ? Number(selectedVariant.price)
+    : productData?.price
+    ? Number(productData.price)
+    : parseInt(content.price_current || "950", 10) || 950;
+
+  const subtotal = quantity * baseUnitPrice;
+
+  // Delivery calculation from app_settings
+  const insideFee = Number(rawSettings.delivery_charge_inside ?? 60);
+  const outsideFee = Number(rawSettings.delivery_charge_outside ?? 120);
+  const freeDeliveryMin = Number(rawSettings.free_delivery_min_order ?? 2000);
+  const isFreeDelivery = freeDeliveryMin > 0 && subtotal >= freeDeliveryMin;
+
+  const deliveryCharge = isFreeDelivery
+    ? 0
+    : deliveryArea === "inside"
+    ? insideFee
+    : outsideFee;
+
+  const grandTotal = subtotal + deliveryCharge;
+
+  // Form Inputs & Validation
   const [formData, setFormData] = useState({
     name: "",
     address: "",
@@ -285,6 +369,7 @@ export default function ShifaLandingPage() {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState<{
     orderId: string;
@@ -295,22 +380,45 @@ export default function ShifaLandingPage() {
     total: number;
   } | null>(null);
 
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const phoneInputRef = useRef<HTMLInputElement>(null);
+  const addressInputRef = useRef<HTMLInputElement>(null);
+
   const validate = () => {
     const err: { [key: string]: string } = {};
-    if (!formData.name.trim()) {
+    if (!formData.name.trim() || formData.name.trim().length < 2) {
       err.name = "আপনার সম্পূর্ণ নাম লিখুন";
     }
     if (!formData.address.trim() || formData.address.trim().length < 5) {
       err.address = "গ্রাম বা এলাকা, থানা ও জেলা সঠিকভাবে লিখুন";
     }
-    const cleanPhone = formData.phone.replace(/\s+/g, "");
+
+    const cleanPhone = normalizeBDPhone(formData.phone);
     if (!cleanPhone) {
       err.phone = "১১ ডিজিটের মোবাইল নাম্বার লিখুন";
     } else if (!/^01[3-9]\d{8}$/.test(cleanPhone)) {
       err.phone = "সঠিক ১১ ডিজিটের মোবাইল নাম্বার দিন (যেমন: 01712345678)";
     }
+
     setErrors(err);
-    return Object.keys(err).length === 0;
+
+    if (Object.keys(err).length > 0) {
+      setSubmitError("অনুগ্রহ করে লাল চিহ্নিত তথ্যগুলো সঠিকভাবে পূরণ করুন।");
+      if (err.name) {
+        nameInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        nameInputRef.current?.focus();
+      } else if (err.phone) {
+        phoneInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        phoneInputRef.current?.focus();
+      } else if (err.address) {
+        addressInputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        addressInputRef.current?.focus();
+      }
+      return false;
+    }
+
+    setSubmitError("");
+    return true;
   };
 
   const handleOrderSubmit = async (e: React.FormEvent) => {
@@ -318,16 +426,24 @@ export default function ShifaLandingPage() {
     if (!validate()) return;
 
     setIsSubmitting(true);
+    setSubmitError("");
+
+    const cleanPhone = normalizeBDPhone(formData.phone);
+
     try {
       const res = await fetch("/api/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: formData.name,
-          phone: formData.phone,
-          address: formData.address,
+          name: formData.name.trim(),
+          phone: cleanPhone,
+          address: formData.address.trim(),
+          district: deliveryArea === "inside" ? "Dhaka" : "Outside Dhaka",
           quantity,
-          unitPrice,
+          unitPrice: baseUnitPrice,
+          deliveryCharge,
+          variant: selectedVariant?.name || "",
+          productId: productData?.id || null,
         }),
       });
 
@@ -343,25 +459,56 @@ export default function ShifaLandingPage() {
           total: data.order.total_price,
         });
 
+        // Trigger Meta Pixel Purchase event if present
+        if (typeof window !== "undefined" && (window as any).fbq) {
+          try {
+            (window as any).fbq("track", "Purchase", {
+              value: grandTotal,
+              currency: "BDT",
+              content_name: content.product_name,
+            });
+          } catch {}
+        }
+
         try {
           confetti({
-            particleCount: 110,
-            spread: 75,
+            particleCount: 120,
+            spread: 80,
             origin: { y: 0.6 },
           });
         } catch {}
       } else {
-        alert(data.error || "অর্ডার প্রসেস করা সম্ভব হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।");
+        const errorMsg = data.error || "অর্ডার প্রসেস করা সম্ভব হয়নি। অনুগ্রহ করে আবার চেষ্টা করুন।";
+        setSubmitError(errorMsg);
+        alert(errorMsg);
       }
     } catch (err) {
-      alert("সার্ভার কানেকশন এরর। অনুগ্রহ করে আবার চেষ্টা করুন।");
+      const netMsg = "সার্ভার কানেকশন ত্রুটি। অনুগ্রহ করে আপনার ইন্টারনেট সংযোগ চেক করে আবার চেষ্টা করুন।";
+      setSubmitError(netMsg);
+      alert(netMsg);
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const activeHotline = rawSettings.hotline_number || content.hotline_number || "01886367377";
+  const activeWhatsapp = normalizeBDPhone(rawSettings.whatsapp_number || content.whatsapp_number || "01886367377");
+  const whatsappMsg = encodeURIComponent(
+    rawSettings.whatsapp_default_message || "হ্যালো, আমি আল-শিফা ন্যাচারাল অয়েল সম্পর্কে জানতে চাই।"
+  );
+
   return (
     <div className="w-full bg-white text-[#1E2B22]">
+      {/* ========================================================= */}
+      {/* 0. DYNAMIC ANNOUNCEMENT BAR                               */}
+      {/* ========================================================= */}
+      {rawSettings.is_announcement_active !== false && rawSettings.announcement_text && (
+        <div className="s-announcement-bar">
+          <span>{rawSettings.announcement_text}</span>
+          <a href={`tel:${activeHotline}`}>কল করুন: {activeHotline}</a>
+        </div>
+      )}
+
       {/* ========================================================= */}
       {/* 1. ORIGINAL SHIFA LANDING PAGE CONTAINER (#shifa-lp)      */}
       {/* ========================================================= */}
@@ -371,10 +518,10 @@ export default function ShifaLandingPage() {
           {/* HERO */}
           <section className="s-hero">
             <div className="s-hero-txt">
-              <span className="s-tag">{content.hero_tag}</span>
-              <h1>{content.hero_title}</h1>
-              <p className="s-sub">{content.hero_subtitle}</p>
-              <p className="s-intro">{content.hero_intro}</p>
+              <span className="s-tag">{landingData?.subtitle ? "১০০% প্রাকৃতিক ও নিরাপদ" : content.hero_tag}</span>
+              <h1>{landingData?.title || productData?.name_primary || content.hero_title}</h1>
+              <p className="s-sub">{landingData?.subtitle || productData?.name_secondary || content.hero_subtitle}</p>
+              <p className="s-intro">{landingData?.description || productData?.description || content.hero_intro}</p>
               <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
                 <svg fill="none" viewBox="0 0 24 24">
                   <path
@@ -393,7 +540,7 @@ export default function ShifaLandingPage() {
             <div className="s-hero-img">
               <img
                 alt={content.hero_title}
-                src="/images/product-bottle-main.png"
+                src={productData?.images?.[0] || "/images/product-bottle-main.png"}
                 loading="eager"
               />
             </div>
@@ -412,7 +559,7 @@ export default function ShifaLandingPage() {
                 transition: "transform .6s ease",
               }}
             >
-              {GALLERY_IMAGES.map((img, i) => (
+              {galleryImages.map((img: any, i: number) => (
                 <img
                   key={i}
                   alt={img.alt}
@@ -422,7 +569,7 @@ export default function ShifaLandingPage() {
               ))}
             </div>
             <div className="s-gal-dots">
-              {GALLERY_IMAGES.map((_, i) => (
+              {galleryImages.map((_: any, i: number) => (
                 <i
                   key={i}
                   className={i === galIndex ? "on" : ""}
@@ -462,7 +609,7 @@ export default function ShifaLandingPage() {
                   <path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5" />
                 </svg>
               </span>
-              <b>{content.badge_1}</b>
+              <b>{featuresList[0]?.title || content.badge_1}</b>
             </div>
             <div className="s-badge">
               <span className="s-ico a-sway">
@@ -471,7 +618,7 @@ export default function ShifaLandingPage() {
                   <path d="M5 19l7-7" />
                 </svg>
               </span>
-              <b>{content.badge_2}</b>
+              <b>{featuresList[1]?.title || content.badge_2}</b>
             </div>
             <div className="s-badge">
               <span className="s-ico a-spin">
@@ -484,7 +631,7 @@ export default function ShifaLandingPage() {
                   <path d="M3 15.5L5 19h3" />
                 </svg>
               </span>
-              <b>{content.badge_3}</b>
+              <b>{featuresList[2]?.title || content.badge_3}</b>
             </div>
           </div>
 
@@ -501,11 +648,13 @@ export default function ShifaLandingPage() {
                 </span>
                 <h2>{content.intro_heading}</h2>
               </div>
-              <p className="s-text">{content.intro_text}</p>
+              <p className="s-text">
+                {productData?.description || landingData?.description || content.intro_text}
+              </p>
             </div>
           </section>
 
-          {/* INGREDIENTS */}
+          {/* DYNAMIC BENEFITS / INGREDIENTS */}
           <section className="s-sec">
             <div className="s-head center">
               <span className="s-ico a-sway">
@@ -516,25 +665,41 @@ export default function ShifaLandingPage() {
               </span>
               <h2>{content.ingredients_heading}</h2>
             </div>
-            <ul className="s-ing">
-              {INGREDIENTS.map((ing, i) => (
-                <li key={i}>
-                  {ing.type === "drop" ? (
+
+            {/* If product has benefits or landing has features, show dynamic cards */}
+            {productData?.benefits && productData.benefits.length > 0 ? (
+              <ul className="s-ing">
+                {productData.benefits.map((benefit: string, i: number) => (
+                  <li key={i}>
                     <svg viewBox="0 0 24 24">
                       <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
                     </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24">
-                      <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
-                    </svg>
-                  )}
-                  {ing.name}
-                </li>
-              ))}
-            </ul>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="s-ing">
+                {DEFAULT_INGREDIENTS.map((ing, i) => (
+                  <li key={i}>
+                    {ing.type === "drop" ? (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24">
+                        <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
+                      </svg>
+                    )}
+                    {ing.name}
+                  </li>
+                ))}
+              </ul>
+            )}
+
             <div className="s-hl">
-              <b>{content.highlight_title}</b>
-              <p>{content.highlight_subtitle}</p>
+              <b>{productData?.name_primary || content.highlight_title}</b>
+              <p>{landingData?.subtitle || content.highlight_subtitle}</p>
             </div>
           </section>
 
@@ -578,8 +743,8 @@ export default function ShifaLandingPage() {
           {/* MID CTA */}
           <div className="s-mid">
             <p>
-              {content.hero_title}
-              <small>{content.hero_subtitle}</small>
+              {landingData?.title || productData?.name_primary || content.hero_title}
+              <small>{landingData?.subtitle || content.hero_subtitle}</small>
             </p>
             <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
               <svg fill="none" viewBox="0 0 24 24">
@@ -597,7 +762,7 @@ export default function ShifaLandingPage() {
             </a>
           </div>
 
-          {/* REVIEWS */}
+          {/* DYNAMIC REVIEWS */}
           <section className="s-sec">
             <div className="s-head center">
               <span className="s-ico oil a-pulse">
@@ -605,7 +770,7 @@ export default function ShifaLandingPage() {
                   <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z" />
                 </svg>
               </span>
-              <h2>ক্রেতাদের মতামত</h2>
+              <h2>সম্মানিত গ্রাহকদের মতামত</h2>
             </div>
             <div className="s-rev-row">
               <button
@@ -636,19 +801,19 @@ export default function ShifaLandingPage() {
                     transition: "transform .55s ease",
                   }}
                 >
-                  {reviewsList.map((rev) => (
+                  {reviewsList.map((rev: any) => (
                     <div key={rev.id} className="s-rev">
                       <div className="s-rev-in">
                         <svg className="s-quote" viewBox="0 0 24 24">
                           <path d="M4 18v-5.5C4 8.4 6.2 6 10 5.5V8c-2 .5-3 1.8-3 4h3v6zm10 0v-5.5c0-4.1 2.2-6.5 6-7V8c-2 .5-3 1.8-3 4h3v6z" />
                         </svg>
                         <div className="s-stars">★★★★★</div>
-                        <p>{rev.text}</p>
+                        <p>{rev.text || rev.review}</p>
                         <div className="s-who">
                           <img
                             alt={rev.name}
                             className="s-av"
-                            src={rev.image}
+                            src={rev.image || "/images/review-rahima-khatun.avif"}
                             loading="lazy"
                           />
                           <div>
@@ -683,6 +848,42 @@ export default function ShifaLandingPage() {
               ))}
             </div>
           </section>
+
+          {/* DYNAMIC FAQ SECTION */}
+          {faqList && faqList.length > 0 && (
+            <section className="s-sec">
+              <div className="s-head center">
+                <span className="s-ico a-pulse">
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                  </svg>
+                </span>
+                <h2>প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী (FAQ)</h2>
+              </div>
+              <div className="s-faq-container">
+                {faqList.map((faqItem: any, idx: number) => {
+                  const isOpen = openFaqIndex === idx;
+                  return (
+                    <div key={idx} className={`s-faq-card ${isOpen ? "open" : ""}`}>
+                      <button
+                        type="button"
+                        className="s-faq-btn"
+                        onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
+                      >
+                        <span>{faqItem.q}</span>
+                        <svg className="s-faq-icon" viewBox="0 0 24 24" fill="none">
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </button>
+                      {isOpen && <div className="s-faq-answer">{faqItem.a}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+          )}
 
           {/* TIMER */}
           <div className="s-timer">
@@ -726,11 +927,11 @@ export default function ShifaLandingPage() {
             এখনই অর্ডার করুন
           </a>
           <div>
-            <a className="s-call" href={`tel:${content.hotline_number}`}>
+            <a className="s-call" href={`tel:${activeHotline}`}>
               <svg viewBox="0 0 24 24">
                 <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
               </svg>
-              Hotline: {content.hotline_number}
+              Hotline: {activeHotline}
             </a>
           </div>
         </section>
@@ -748,57 +949,93 @@ export default function ShifaLandingPage() {
                 <path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z" />
               </svg>
             </div>
-            <h2>অর্ডার ফর্ম</h2>
-            <p>আপনার অর্ডারটি প্লেস করতে, অনুগ্রহ করে নিচের তথ্য গুলো দিয়ে সহযোগিতা করুন।</p>
+            <h2>অর্ডার ফর্ম (ক্যাশ অন ডেলিভারি)</h2>
+            <p>আপনার অর্ডারটি প্লেস করতে নিচের প্রয়োজনীয় তথ্যগুলো পূরণ করুন।</p>
           </div>
 
           {/* White Card Body */}
           <div className="s-checkout-body">
             <form onSubmit={handleOrderSubmit}>
-              {/* Product Option */}
+              {/* Product Option & Package Selection */}
               <div className="s-cf-group">
-                <h3 className="s-cf-heading">Your Products</h3>
-                <div className="s-cf-product">
-                  <input
-                    type="radio"
-                    checked
-                    readOnly
-                    className="s-cf-radio"
-                  />
-                  <img
-                    src="/images/product-bottle-main.png"
-                    alt={content.product_name}
-                    className="s-cf-prod-img"
-                  />
-                  <div className="s-cf-prod-info">
-                    <span className="s-cf-prod-title">{content.product_name}</span>
-                    <div className="s-cf-qty">
-                      <button
-                        type="button"
-                        className="s-cf-qty-btn"
-                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                      >
-                        −
-                      </button>
-                      <input
-                        type="text"
-                        readOnly
-                        value={toBengaliDigits(quantity)}
-                        className="s-cf-qty-val"
-                      />
-                      <button
-                        type="button"
-                        className="s-cf-qty-btn"
-                        onClick={() => setQuantity((q) => q + 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="s-cf-prod-price">
-                      ৳ {toBengaliDigits(totalPrice)}
+                <h3 className="s-cf-heading">প্যাকেজ নির্বাচন করুন</h3>
+
+                {hasVariants ? (
+                  <div className="s-cf-variants-list">
+                    {variants.map((v: any, idx: number) => {
+                      const isSelected = selectedVariantIndex === idx;
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => {
+                            setSelectedVariantIndex(idx);
+                            setQuantity(1);
+                          }}
+                          className={`s-cf-variant-card ${isSelected ? "active" : ""}`}
+                        >
+                          <span className="s-cf-variant-name">
+                            <input
+                              type="radio"
+                              name="variant"
+                              checked={isSelected}
+                              onChange={() => {
+                                setSelectedVariantIndex(idx);
+                                setQuantity(1);
+                              }}
+                              className="s-cf-radio"
+                            />
+                            {v.name}
+                          </span>
+                          <span className="s-cf-variant-price">৳ {toBengaliDigits(v.price)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="s-cf-product">
+                    <input
+                      type="radio"
+                      checked
+                      readOnly
+                      className="s-cf-radio"
+                    />
+                    <img
+                      src={productData?.images?.[0] || "/images/product-bottle-main.png"}
+                      alt={content.product_name}
+                      className="s-cf-prod-img"
+                    />
+                    <div className="s-cf-prod-info">
+                      <span className="s-cf-prod-title">
+                        {productData?.name_primary || content.product_name}
+                      </span>
+                      <div className="s-cf-qty">
+                        <button
+                          type="button"
+                          className="s-cf-qty-btn"
+                          onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        >
+                          −
+                        </button>
+                        <input
+                          type="text"
+                          readOnly
+                          value={toBengaliDigits(quantity)}
+                          className="s-cf-qty-val"
+                        />
+                        <button
+                          type="button"
+                          className="s-cf-qty-btn"
+                          onClick={() => setQuantity((q) => q + 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                      <div className="s-cf-prod-price">
+                        ৳ {toBengaliDigits(subtotal)}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Customer Info */}
@@ -810,33 +1047,19 @@ export default function ShifaLandingPage() {
                     আপনার সম্পূর্ণ নাম লিখুন <span className="req">*</span>
                   </label>
                   <input
+                    ref={nameInputRef}
                     type="text"
                     value={formData.name}
                     onChange={(e) => {
                       setFormData({ ...formData, name: e.target.value });
                       if (errors.name) setErrors({ ...errors, name: "" });
+                      if (submitError) setSubmitError("");
                     }}
-                    placeholder="আপনার সম্পূর্ণ নাম লিখুন"
+                    placeholder="যেমন: মোঃ সাকিব হোসেন"
                     className="s-cf-input"
+                    style={{ borderColor: errors.name ? "#dc2626" : undefined }}
                   />
                   {errors.name && <p className="s-cf-error">{errors.name}</p>}
-                </div>
-
-                <div className="s-cf-field">
-                  <label className="s-cf-label">
-                    গ্রাম বা এলাকা....... থানা ......জেলা <span className="req">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.address}
-                    onChange={(e) => {
-                      setFormData({ ...formData, address: e.target.value });
-                      if (errors.address) setErrors({ ...errors, address: "" });
-                    }}
-                    placeholder="গ্রাম বা এলাকা....... থানা ......জেলা"
-                    className="s-cf-input"
-                  />
-                  {errors.address && <p className="s-cf-error">{errors.address}</p>}
                 </div>
 
                 <div className="s-cf-field">
@@ -844,75 +1067,138 @@ export default function ShifaLandingPage() {
                     ১১ ডিজিটের মোবাইল নাম্বার লিখুন <span className="req">*</span>
                   </label>
                   <input
+                    ref={phoneInputRef}
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => {
                       setFormData({ ...formData, phone: e.target.value });
                       if (errors.phone) setErrors({ ...errors, phone: "" });
+                      if (submitError) setSubmitError("");
                     }}
-                    placeholder="১১ ডিজিটের মোবাইল নাম্বার লিখুন"
+                    placeholder="যেমন: 017XXXXXXXX"
                     className="s-cf-input"
+                    style={{ borderColor: errors.phone ? "#dc2626" : undefined }}
                   />
                   {errors.phone && <p className="s-cf-error">{errors.phone}</p>}
                 </div>
+
+                <div className="s-cf-field">
+                  <label className="s-cf-label">
+                    সম্পূর্ণ ঠিকানা (গ্রাম বা এলাকা, থানা ও জেলা) <span className="req">*</span>
+                  </label>
+                  <input
+                    ref={addressInputRef}
+                    type="text"
+                    value={formData.address}
+                    onChange={(e) => {
+                      setFormData({ ...formData, address: e.target.value });
+                      if (errors.address) setErrors({ ...errors, address: "" });
+                      if (submitError) setSubmitError("");
+                    }}
+                    placeholder="যেমন: বাড়ি ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা"
+                    className="s-cf-input"
+                    style={{ borderColor: errors.address ? "#dc2626" : undefined }}
+                  />
+                  {errors.address && <p className="s-cf-error">{errors.address}</p>}
+                </div>
               </div>
 
-              {/* Shipping Method */}
+              {/* Delivery / Shipping Options */}
               <div className="s-cf-group">
-                <h3 className="s-cf-heading">Shipping</h3>
-                <div className="s-cf-shipping-row">
-                  <input
-                    type="radio"
-                    checked
-                    readOnly
-                    className="s-cf-radio"
-                  />
-                  <span>{content.shipping_text}</span>
+                <h3 className="s-cf-heading">ডেলিভারি এরিয়া নির্ধারণ করুন</h3>
+                <div className="s-cf-shipping-grid">
+                  <label
+                    className={`s-cf-shipping-card ${deliveryArea === "inside" ? "active" : ""}`}
+                    onClick={() => setDeliveryArea("inside")}
+                  >
+                    <input
+                      type="radio"
+                      name="deliveryArea"
+                      checked={deliveryArea === "inside"}
+                      onChange={() => setDeliveryArea("inside")}
+                    />
+                    <div>
+                      <span className="s-cf-shipping-title">ঢাকার ভিতরে</span>
+                      <span className="s-cf-shipping-price">
+                        {isFreeDelivery ? "ফ্রি ডেলিভারি (৳০)" : `৳ ${toBengaliDigits(insideFee)}`}
+                      </span>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`s-cf-shipping-card ${deliveryArea === "outside" ? "active" : ""}`}
+                    onClick={() => setDeliveryArea("outside")}
+                  >
+                    <input
+                      type="radio"
+                      name="deliveryArea"
+                      checked={deliveryArea === "outside"}
+                      onChange={() => setDeliveryArea("outside")}
+                    />
+                    <div>
+                      <span className="s-cf-shipping-title">ঢাকার বাইরে</span>
+                      <span className="s-cf-shipping-price">
+                        {isFreeDelivery ? "ফ্রি ডেলিভারি (৳০)" : `৳ ${toBengaliDigits(outsideFee)}`}
+                      </span>
+                    </div>
+                  </label>
                 </div>
               </div>
 
               {/* Order Review Table */}
               <div className="s-cf-group">
-                <h3 className="s-cf-heading">আপনার অর্ডার</h3>
+                <h3 className="s-cf-heading">আপনার অর্ডার বিবরণী</h3>
                 <table className="s-cf-table">
                   <thead>
                     <tr>
-                      <th>Product</th>
-                      <th style={{ textAlign: "right" }}>Subtotal</th>
+                      <th>পণ্য বিবরণ</th>
+                      <th style={{ textAlign: "right" }}>মূল্য</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>
-                        {content.product_name} × {toBengaliDigits(quantity)}
+                        {selectedVariant
+                          ? `${productData?.name_primary || content.product_name} (${selectedVariant.name})`
+                          : `${productData?.name_primary || content.product_name} × ${toBengaliDigits(quantity)}`}
                       </td>
                       <td className="val">
-                        ৳ {toBengaliDigits(totalPrice)}
+                        ৳ {toBengaliDigits(subtotal)}
                       </td>
                     </tr>
                   </tbody>
                   <tfoot>
                     <tr>
-                      <th>Subtotal</th>
+                      <th>সাবটোটাল</th>
                       <td className="val">
-                        ৳ {toBengaliDigits(totalPrice)}
+                        ৳ {toBengaliDigits(subtotal)}
                       </td>
                     </tr>
                     <tr>
-                      <th>Shipment</th>
-                      <td className="val" style={{ color: "#0E5A2E" }}>
-                        {content.shipping_text}
+                      <th>ডেলিভারি চার্জ</th>
+                      <td className="val" style={{ color: deliveryCharge === 0 ? "#0E5A2E" : undefined }}>
+                        {deliveryCharge === 0 ? "ফ্রি ডেলিভারি" : `৳ ${toBengaliDigits(deliveryCharge)}`}
                       </td>
                     </tr>
                     <tr className="total">
-                      <th>Total</th>
+                      <th>মোট প্রদেয় বিল</th>
                       <td className="val">
-                        ৳ {toBengaliDigits(totalPrice)}
+                        ৳ {toBengaliDigits(grandTotal)}
                       </td>
                     </tr>
                   </tfoot>
                 </table>
               </div>
+
+              {/* Submit Error Alert */}
+              {submitError && (
+                <div className="s-cf-alert-banner">
+                  <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span>{submitError}</span>
+                </div>
+              )}
 
               {/* Submit Button */}
               <button
@@ -923,7 +1209,9 @@ export default function ShifaLandingPage() {
                 {isSubmitting ? (
                   <span>অর্ডার প্রসেস হচ্ছে...</span>
                 ) : (
-                  <span>অর্ডার করুন</span>
+                  <span>
+                    অর্ডার কনফার্ম করুন - ৳ {toBengaliDigits(grandTotal)}
+                  </span>
                 )}
               </button>
             </form>
@@ -987,6 +1275,23 @@ export default function ShifaLandingPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 4. FLOATING WHATSAPP BUTTON                               */}
+      {/* ========================================================= */}
+      {activeWhatsapp && (
+        <a
+          href={`https://wa.me/880${activeWhatsapp}?text=${whatsappMsg}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="WhatsApp Support"
+          className="s-floating-whatsapp"
+        >
+          <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
+            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
+          </svg>
+        </a>
       )}
     </div>
   );

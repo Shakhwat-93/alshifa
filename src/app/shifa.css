@@ -547,3 +547,226 @@
   opacity: 0.7;
   cursor: not-allowed;
 }
+
+/* Announcement Bar */
+.s-announcement-bar {
+  background: #08441F;
+  color: #ffffff;
+  text-align: center;
+  padding: 9px 16px;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  z-index: 40;
+}
+.s-announcement-bar a {
+  color: #FFE180;
+  text-decoration: underline;
+  margin-left: 6px;
+}
+
+/* Shipping Options Grid */
+.s-cf-shipping-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 6px;
+}
+@media (max-width: 640px) {
+  .s-cf-shipping-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.s-cf-shipping-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border: 2px solid #E2ECE0;
+  border-radius: 12px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+.s-cf-shipping-card:hover {
+  border-color: #A3C9A0;
+  background: #FAFCF9;
+}
+.s-cf-shipping-card.active {
+  border-color: #0E5A2E;
+  background: #F0F7EE;
+  box-shadow: 0 2px 8px rgba(14, 90, 46, 0.12);
+}
+.s-cf-shipping-card input[type="radio"] {
+  accent-color: #0E5A2E;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  cursor: pointer;
+}
+.s-cf-shipping-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E2B22;
+  display: block;
+}
+.s-cf-shipping-price {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0E5A2E;
+  display: block;
+}
+
+/* Variant Package Pills */
+.s-cf-variants-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+.s-cf-variant-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border: 2px solid #E2ECE0;
+  border-radius: 12px;
+  background: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.s-cf-variant-card:hover {
+  border-color: #A3C9A0;
+}
+.s-cf-variant-card.active {
+  border-color: #0E5A2E;
+  background: #F0F7EE;
+  box-shadow: 0 2px 8px rgba(14, 90, 46, 0.1);
+}
+.s-cf-variant-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1E2B22;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.s-cf-variant-price {
+  font-size: 16px;
+  font-weight: 700;
+  color: #0E5A2E;
+}
+
+/* FAQ Accordion */
+.s-faq-container {
+  max-width: 820px;
+  margin: 24px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.s-faq-card {
+  border: 1.5px solid #DCE6D8;
+  border-radius: 14px;
+  background: #FFFFFF;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.s-faq-card.open {
+  border-color: #0E5A2E;
+  box-shadow: 0 4px 12px rgba(14, 90, 46, 0.08);
+}
+.s-faq-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E2B22;
+  text-align: left;
+  cursor: pointer;
+}
+.s-faq-btn:hover {
+  color: #0E5A2E;
+}
+.s-faq-icon {
+  width: 22px;
+  height: 22px;
+  stroke: #0E5A2E;
+  stroke-width: 2.2;
+  transition: transform 0.25s ease;
+}
+.s-faq-card.open .s-faq-icon {
+  transform: rotate(180deg);
+}
+.s-faq-answer {
+  padding: 0 20px 18px;
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: #46554B;
+  border-top: 1px dashed #E2ECE0;
+  padding-top: 14px;
+}
+
+/* Validation Alert Banner */
+.s-cf-alert-banner {
+  background: #FEF2F2;
+  border: 1.5px solid #FCA5A5;
+  color: #B91C1C;
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 600;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  animation: sShake 0.4s ease;
+}
+@keyframes sShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+/* Floating Actions */
+.s-floating-whatsapp {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 999;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #25D366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 20px rgba(37, 211, 102, 0.45);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: sFloatPulse 3s ease-in-out infinite;
+}
+.s-floating-whatsapp:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(37, 211, 102, 0.6);
+}
+.s-floating-whatsapp svg {
+  width: 32px;
+  height: 32px;
+  fill: #FFFFFF;
+}
+@keyframes sFloatPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
