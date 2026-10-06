@@ -76,12 +76,7 @@ export async function POST(request: Request) {
         grand_total: grandTotal,
         status: "pending",
         note: note || null,
-        courier_ratio_data: {
-          success_rate: 96,
-          risk: "low",
-          total_orders: 1,
-          canceled_orders: 0,
-        },
+        courier_ratio_data: null,
       })
       .select()
       .single();

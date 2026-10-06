@@ -39,6 +39,7 @@ import {
   Eye,
   LogOut,
   ShieldCheck,
+  ShieldAlert,
   Send,
   Sliders,
   DollarSign,
@@ -119,7 +120,8 @@ export default function EnterpriseAdmin() {
   const [orderStatusFilter, setOrderStatusFilter] = useState("all");
   const [orderSearchTerm, setOrderSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
-  const [orderModalMode, setOrderModalMode] = useState<"view" | "edit" | "add" | "invoice" | "pos" | "courier_book" | null>(null);
+  const [orderModalMode, setOrderModalMode] = useState<"view" | "edit" | "add" | "invoice" | "pos" | "courier_book" | "courier_fraud" | null>(null);
+  const [checkingCourierId, setCheckingCourierId] = useState<string | null>(null);
 
   // New Order Form State
   const [newOrderForm, setNewOrderForm] = useState({
@@ -445,6 +447,41 @@ export default function EnterpriseAdmin() {
       }
     } finally {
       setIsBookingShipment(false);
+    }
+  };
+
+  // ==================== BDCOURIER FRAUD CHECK ====================
+  const handleCheckBDCourier = async (orderId: string, phone: string) => {
+    if (!phone) {
+      alert("অর্ডারে কোনো ফোন নাম্বার পাওয়া যায়নি।");
+      return;
+    }
+    setCheckingCourierId(orderId);
+    try {
+      const res = await fetch("/api/admin/bdcourier-check", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, phone }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrders((prev) =>
+          prev.map((o) =>
+            o.id === orderId ? { ...o, courier_ratio_data: data.data } : o
+          )
+        );
+        if (selectedOrder?.id === orderId) {
+          setSelectedOrder((prev: any) => ({ ...prev, courier_ratio_data: data.data }));
+        }
+        if (soundEnabled) playNotificationChime();
+      } else {
+        alert(data.error || "BDCourier ফ্রড চেক ব্যর্থ হয়েছে।");
+      }
+    } catch (err) {
+      console.error("BDCourier check failed:", err);
+      alert("সার্ভার কানেকশন ত্রুটি। অনুগ্রহ করে আবার চেষ্টা করুন।");
+    } finally {
+      setCheckingCourierId(null);
     }
   };
 
@@ -1244,10 +1281,63 @@ export default function EnterpriseAdmin() {
                             </td>
                             {/* BDCourier Phone Intelligence Badge */}
                             <td className="py-4 px-4">
-                              <div className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-semibold text-[10px]">
-                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                                <span>৯৬% সাকসেস (Safe)</span>
-                              </div>
+                              {checkingCourierId === order.id ? (
+                                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-50 border border-purple-200 text-purple-700 font-semibold text-[10px] animate-pulse">
+                                  <RefreshCw className="w-3 h-3 animate-spin text-purple-600" />
+                                  <span>যাচাই হচ্ছে...</span>
+                                </div>
+                              ) : order.courier_ratio_data ? (
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedOrder(order);
+                                      setOrderModalMode("courier_fraud");
+                                    }}
+                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg border font-semibold text-[10px] cursor-pointer hover:shadow-xs transition-all ${
+                                      order.courier_ratio_data.risk === "high"
+                                        ? "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                                        : order.courier_ratio_data.risk === "medium"
+                                        ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                                        : "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                                    }`}
+                                    title="বিস্তারিত ফ্রড হিস্টোরি রিপোর্ট দেখতে ক্লিক করুন"
+                                  >
+                                    {order.courier_ratio_data.risk === "high" ? (
+                                      <ShieldAlert className="w-3.5 h-3.5 text-red-600" />
+                                    ) : order.courier_ratio_data.risk === "medium" ? (
+                                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                                    ) : (
+                                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                    )}
+                                    <span>
+                                      {order.courier_ratio_data.success_rate}% সাকসেস
+                                      {order.courier_ratio_data.risk === "high" ? " (রিস্ক!)" : ""}
+                                    </span>
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCheckBDCourier(order.id, order.phone);
+                                    }}
+                                    title="পুনরায় যাচাই করুন"
+                                    className="p-1 text-gray-400 hover:text-purple-600 hover:bg-purple-50 rounded-md transition-colors"
+                                  >
+                                    <RefreshCw className="w-3 h-3" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={() => handleCheckBDCourier(order.id, order.phone)}
+                                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-semibold text-[10px] transition-all"
+                                  title="BDCourier থেকে ফ্রড হিস্টোরি ও ডেলিভারি সাকসেস রেট চেক করুন"
+                                >
+                                  <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
+                                  <span>BDCourier চেক</span>
+                                </button>
+                              )}
                             </td>
                             <td className="py-4 px-4">
                               <select
@@ -2129,6 +2219,45 @@ export default function EnterpriseAdmin() {
                     </div>
                   </div>
                 </div>
+
+                {/* BDCourier Intelligence Credentials */}
+                <div className="bg-white p-6 rounded-3xl border border-purple-100 shadow-sm space-y-4 bg-gradient-to-br from-white to-purple-50/20">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="w-5 h-5 text-purple-600" />
+                        <h4 className="text-sm font-bold text-gray-900">BDCourier ফ্রড চেক API ক্রেডেনশিয়াল</h4>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        গ্রাহকের ফোন নাম্বার দিয়ে কুরিয়ার ডেলিভারি রেট ও ফ্রড রিপোর্ট যাচাই করার অফিসিয়াল API।
+                      </p>
+                    </div>
+                    <a
+                      href="https://bdcourier.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 text-xs font-semibold w-fit"
+                    >
+                      <span>bdcourier.com</span>
+                      <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1.5">
+                      BDCourier API Key / Bearer Token
+                    </label>
+                    <input
+                      type="text"
+                      value={settingsForm.bdcourier_api_key || ""}
+                      onChange={(e) => setSettingsForm({ ...settingsForm, bdcourier_api_key: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-mono focus:ring-1 focus:ring-purple-500"
+                      placeholder="আপনার BDCourier ড্যাশবোর্ড থেকে প্রাপ্ত API Key দিন"
+                    />
+                    <p className="text-[11px] text-gray-400 mt-1">
+                      BDCourier অ্যাকাউন্ট না থাকলে bdcourier.com এ সাইন আপ করে API কী সংগ্রহ করুন। এটি অর্ডার টেবিলে গ্রাহক যাচাই করতে কাজ করবে।
+                    </p>
+                  </div>
+                </div>
               </form>
             </div>
           )}
@@ -2722,6 +2851,152 @@ export default function EnterpriseAdmin() {
                 ইউজার তৈরি করুন
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 8. BDCourier Fraud Intelligence Details Modal */}
+      {orderModalMode === "courier_fraud" && selectedOrder && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl p-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setOrderModalMode(null)}
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 p-1 rounded-lg"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-5 border-b border-gray-100 pb-4">
+              <div
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
+                  selectedOrder.courier_ratio_data?.risk === "high"
+                    ? "bg-red-50 text-red-600"
+                    : selectedOrder.courier_ratio_data?.risk === "medium"
+                    ? "bg-amber-50 text-amber-600"
+                    : "bg-emerald-50 text-emerald-600"
+                }`}
+              >
+                {selectedOrder.courier_ratio_data?.risk === "high" ? (
+                  <ShieldAlert className="w-6 h-6" />
+                ) : (
+                  <ShieldCheck className="w-6 h-6" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-base">BDCourier ফ্রড ও পার্সেল রিপোর্ট</h3>
+                <p className="text-xs text-gray-500 font-mono">
+                  {selectedOrder.customer_name} • {selectedOrder.phone}
+                </p>
+              </div>
+            </div>
+
+            {selectedOrder.courier_ratio_data ? (
+              <div className="space-y-4 text-xs">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-3 gap-2.5">
+                  <div className="p-3 bg-gray-50 rounded-2xl text-center border border-gray-100">
+                    <span className="text-[10px] font-bold text-gray-400 block uppercase">মোট পার্সেল</span>
+                    <span className="text-lg font-extrabold text-gray-800">
+                      {selectedOrder.courier_ratio_data.total_orders ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-emerald-50 rounded-2xl text-center border border-emerald-100">
+                    <span className="text-[10px] font-bold text-emerald-600 block uppercase">সফল ডেলিভারি</span>
+                    <span className="text-lg font-extrabold text-emerald-700">
+                      {selectedOrder.courier_ratio_data.success_orders ?? 0}
+                    </span>
+                  </div>
+                  <div className="p-3 bg-red-50 rounded-2xl text-center border border-red-100">
+                    <span className="text-[10px] font-bold text-red-500 block uppercase">বাতিল / রিটার্ন</span>
+                    <span className="text-lg font-extrabold text-red-600">
+                      {selectedOrder.courier_ratio_data.canceled_orders ?? 0}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Success Rate Card */}
+                <div className="p-3.5 rounded-2xl border border-gray-100 bg-gray-50 flex items-center justify-between">
+                  <span className="font-semibold text-gray-700">ডেলিভারি সাকসেস রেট:</span>
+                  <span
+                    className={`text-base font-extrabold ${
+                      selectedOrder.courier_ratio_data.risk === "high"
+                        ? "text-red-600"
+                        : selectedOrder.courier_ratio_data.risk === "medium"
+                        ? "text-amber-600"
+                        : "text-emerald-600"
+                    }`}
+                  >
+                    {selectedOrder.courier_ratio_data.success_rate ?? 0}%
+                    <span className="text-xs font-normal ml-1 text-gray-500">
+                      ({selectedOrder.courier_ratio_data.risk === "high"
+                        ? "উচ্চ ঝুঁকি"
+                        : selectedOrder.courier_ratio_data.risk === "medium"
+                        ? "মাঝারি ঝুঁকি"
+                        : "নিরাপদ"})
+                    </span>
+                  </span>
+                </div>
+
+                {/* Fraud Reports List if any */}
+                {selectedOrder.courier_ratio_data.reports && selectedOrder.courier_ratio_data.reports.length > 0 ? (
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-red-600 text-xs flex items-center gap-1.5">
+                      <AlertTriangle className="w-4 h-4" />
+                      <span>মার্চেন্ট রিপোর্ট বা অভিযোগ ({selectedOrder.courier_ratio_data.reports.length}টি)</span>
+                    </h4>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 p-2 bg-red-50/50 rounded-xl border border-red-100">
+                      {selectedOrder.courier_ratio_data.reports.map((rep: any, idx: number) => (
+                        <div key={idx} className="p-2.5 bg-white rounded-lg border border-red-100 text-[11px] text-gray-700 space-y-0.5">
+                          <p className="font-bold text-red-700">{rep.reason || rep.title || "অভিযোগ রিপোর্ট"}</p>
+                          {rep.description && <p className="text-gray-600">{rep.description}</p>}
+                          {rep.courier && <p className="text-[10px] text-gray-400">কুরিয়ার: {rep.courier}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-2 text-emerald-800">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <p className="text-[11px]">এই ফোন নাম্বারে অন্য কোনো সেলারের কোনো প্রতারণার রিপোর্ট নেই।</p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleCheckBDCourier(selectedOrder.id, selectedOrder.phone);
+                    }}
+                    disabled={checkingCourierId === selectedOrder.id}
+                    className="flex-1 py-3 rounded-xl bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold text-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${checkingCourierId === selectedOrder.id ? "animate-spin" : ""}`} />
+                    <span>{checkingCourierId === selectedOrder.id ? "যাচাই হচ্ছে..." : "পুনরায় চেক করুন"}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOrderModalMode(null)}
+                    className="px-4 py-3 rounded-xl bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold text-xs"
+                  >
+                    বন্ধ করুন
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-6 space-y-3">
+                <p className="text-gray-500 text-xs">এখনও BDCourier ফ্রড চেক করা হয়নি।</p>
+                <button
+                  type="button"
+                  onClick={() => handleCheckBDCourier(selectedOrder.id, selectedOrder.phone)}
+                  disabled={checkingCourierId === selectedOrder.id}
+                  className="px-4 py-2.5 rounded-xl bg-purple-600 text-white font-bold text-xs flex items-center justify-center gap-2 mx-auto shadow-md"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>{checkingCourierId === selectedOrder.id ? "যাচাই হচ্ছে..." : "এখনই BDCourier ফ্রড চেক করুন"}</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
