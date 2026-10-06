@@ -127,12 +127,12 @@ export default function ShifaLandingPage() {
         }
         if (data.reviews && data.reviews.length > 0) {
           setReviewsList(
-            data.reviews.map((r: any) => ({
-              id: r.id,
+            data.reviews.map((r: any, idx: number) => ({
+              id: r.id || idx + 1,
               name: r.name,
-              location: r.location,
-              image: r.image_url || "/images/review-rahima-khatun.avif",
-              text: r.review_text,
+              location: r.location || "বাংলাদেশ",
+              image: r.image_url || r.image || "/images/review-rahima-khatun.avif",
+              text: r.review_text || r.review || "",
             }))
           );
         }

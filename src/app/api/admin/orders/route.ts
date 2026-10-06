@@ -1,72 +1,114 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
-    const search = searchParams.get("search");
+export const revalidate = 0;
 
-    let query = supabaseAdmin
-      .from("alshifa_orders")
+// GET: List all orders
+export async function GET() {
+  try {
+    const { data: orders, error } = await supabaseAdmin
+      .from("app_orders")
       .select("*")
       .order("created_at", { ascending: false });
-
-    if (status && status !== "all") {
-      query = query.eq("status", status);
-    }
-
-    if (search) {
-      query = query.or(
-        `customer_name.ilike.%${search}%,customer_phone.ilike.%${search}%,order_id.ilike.%${search}%`
-      );
-    }
-
-    const { data: orders, error } = await query;
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    // Stats
-    const { data: allOrders } = await supabaseAdmin
-      .from("alshifa_orders")
-      .select("status, total_price");
+    const { data: items } = await supabaseAdmin.from("app_order_items").select("*");
+    const itemsMap: Record<string, any[]> = {};
+    if (items) {
+      items.forEach((it) => {
+        if (!itemsMap[it.order_id]) itemsMap[it.order_id] = [];
+        itemsMap[it.order_id].push(it);
+      });
+    }
 
-    const stats = {
-      total: allOrders?.length || 0,
-      pending: allOrders?.filter((o) => o.status === "pending").length || 0,
-      confirmed: allOrders?.filter((o) => o.status === "confirmed").length || 0,
-      delivered: allOrders?.filter((o) => o.status === "delivered").length || 0,
-      cancelled: allOrders?.filter((o) => o.status === "cancelled").length || 0,
-      revenue:
-        allOrders
-          ?.filter((o) => o.status !== "cancelled")
-          .reduce((sum, o) => sum + Number(o.total_price || 0), 0) || 0,
-    };
+    const fullOrders = (orders || []).map((o) => ({
+      ...o,
+      items: itemsMap[o.id] || [],
+    }));
 
-    return NextResponse.json({ orders: orders || [], stats });
+    return NextResponse.json({ orders: fullOrders });
   } catch (err: any) {
     return NextResponse.json({ error: "Failed to fetch orders" }, { status: 500 });
   }
 }
 
-export async function PATCH(request: Request) {
+// POST: Add manual order
+export async function POST(request: Request) {
   try {
-    const { id, status, notes } = await request.json();
+    const body = await request.json();
+    const {
+      customer_name,
+      phone,
+      address,
+      district = "Dhaka",
+      product_name = "আল-শিফা প্রিমিয়াম হেয়ার অয়েল",
+      quantity = 1,
+      price = 950,
+      delivery_charge = 60,
+      note = "",
+      status = "pending",
+    } = body;
 
-    if (!id) {
-      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+    const orderNumber = "ORD-" + Math.floor(100000 + Math.random() * 900000);
+    const subtotal = quantity * price;
+    const grandTotal = subtotal + delivery_charge;
+
+    const { data: order, error } = await supabaseAdmin
+      .from("app_orders")
+      .insert({
+        order_number: orderNumber,
+        customer_name,
+        phone,
+        address,
+        district,
+        subtotal,
+        delivery_charge,
+        grand_total: grandTotal,
+        status,
+        note,
+        courier_ratio_data: {
+          success_rate: 98,
+          risk: "low",
+          total_orders: 1,
+        },
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    const updates: Record<string, any> = {
-      updated_at: new Date().toISOString(),
-    };
-    if (status) updates.status = status;
-    if (notes !== undefined) updates.notes = notes;
+    if (order?.id) {
+      await supabaseAdmin.from("app_order_items").insert({
+        order_id: order.id,
+        product_name,
+        quantity,
+        price,
+      });
+    }
+
+    return NextResponse.json({ success: true, order });
+  } catch (err: any) {
+    return NextResponse.json({ error: "Failed to create order" }, { status: 500 });
+  }
+}
+
+// PATCH: Update order status, courier info, notes
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "Order ID required" }, { status: 400 });
+    }
 
     const { data, error } = await supabaseAdmin
-      .from("alshifa_orders")
+      .from("app_orders")
       .update(updates)
       .eq("id", id)
       .select()
@@ -82,19 +124,17 @@ export async function PATCH(request: Request) {
   }
 }
 
+// DELETE: Delete order
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
     if (!id) {
-      return NextResponse.json({ error: "Order ID is required" }, { status: 400 });
+      return NextResponse.json({ error: "Order ID required" }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
-      .from("alshifa_orders")
-      .delete()
-      .eq("id", id);
+    const { error } = await supabaseAdmin.from("app_orders").delete().eq("id", id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
