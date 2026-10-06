@@ -4,9 +4,6 @@ import React, { useState } from "react";
 import confetti from "canvas-confetti";
 import {
   CheckCircle2,
-  Truck,
-  ShieldCheck,
-  ShoppingBag,
   Flame,
   ArrowRight,
 } from "lucide-react";
@@ -21,6 +18,15 @@ interface PackageOption {
   savings: number;
   isPopular?: boolean;
   tag?: string;
+}
+
+interface OrderSuccessData {
+  orderId: string;
+  name: string;
+  phone: string;
+  address: string;
+  package: string;
+  total: number;
 }
 
 const packages: PackageOption[] = [
@@ -64,7 +70,7 @@ export default function OrderSection() {
   const [shippingArea, setShippingArea] = useState("all-bd-free");
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderSuccess, setOrderSuccess] = useState<any | null>(null);
+  const [orderSuccess, setOrderSuccess] = useState<OrderSuccessData | null>(null);
 
   const validate = () => {
     const err: { [key: string]: string } = {};
@@ -89,7 +95,7 @@ export default function OrderSection() {
 
     setTimeout(() => {
       setIsSubmitting(false);
-      const orderData = {
+      const orderData: OrderSuccessData = {
         orderId: "SHIFA-" + Math.floor(100000 + Math.random() * 900000),
         name,
         phone,
@@ -106,7 +112,7 @@ export default function OrderSection() {
           spread: 80,
           origin: { y: 0.6 },
         });
-      } catch (err) {
+      } catch {
         // Fallback
       }
     }, 600);

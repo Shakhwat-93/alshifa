@@ -1,5 +1,5 @@
 import React from "react";
-import { Phone, Flame } from "lucide-react";
+import { Phone } from "lucide-react";
 
 export default function TopBar() {
   return (
