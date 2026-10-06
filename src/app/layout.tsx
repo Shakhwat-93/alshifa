@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_Bengali, Plus_Jakarta_Sans } from "next/font/google";
+import { Hind_Siliguri, Noto_Sans_Bengali, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
+import "./shifa.css";
+
+const hindSiliguri = Hind_Siliguri({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["bengali"],
+  variable: "--font-hind-siliguri",
+  display: "swap",
+});
 
 const notoBengali = Noto_Sans_Bengali({
   weight: ["400", "500", "600", "700", "800"],
@@ -62,9 +70,9 @@ export default function RootLayout({
   return (
     <html
       lang="bn"
-      className={`${notoBengali.variable} ${plusJakarta.variable} scroll-smooth antialiased`}
+      className={`${hindSiliguri.variable} ${notoBengali.variable} ${plusJakarta.variable} scroll-smooth antialiased`}
     >
-      <body className="min-h-screen bg-[#fcfcfb] text-[#1c1917] selection:bg-emerald-100 selection:text-emerald-900 pb-20 md:pb-0 font-bengali">
+      <body className="min-h-screen bg-[#ffffff] text-[#1E2B22] selection:bg-emerald-100 selection:text-emerald-900 font-hind">
         {children}
       </body>
     </html>
