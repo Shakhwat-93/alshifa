@@ -230,7 +230,7 @@ export default function OrderSection() {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="যেমন: মোঃ কামরুল হাসান"
+                      placeholder="আপনার সম্পূর্ণ নাম লিখুন"
                       className={`w-full px-4 py-2.5 sm:py-3 rounded-xl border text-sm transition focus:outline-hidden focus:ring-1 bg-[#fafaf8] ${
                         errors.name
                           ? "border-red-400 focus:ring-red-300"
@@ -252,8 +252,8 @@ export default function OrderSection() {
                       type="tel"
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="01XXXXXXXXX"
-                      className={`w-full px-4 py-2.5 sm:py-3 rounded-xl border text-sm transition focus:outline-hidden focus:ring-1 bg-[#fafaf8] font-latin ${
+                      placeholder="আপনার মোবাইল নম্বর লিখুন"
+                      className={`w-full px-4 py-2.5 sm:py-3 rounded-xl border text-sm transition focus:outline-hidden focus:ring-1 bg-[#fafaf8] ${
                         errors.phone
                           ? "border-red-400 focus:ring-red-300"
                           : "border-stone-300 focus:border-emerald-600 focus:ring-emerald-200"
@@ -279,7 +279,7 @@ export default function OrderSection() {
                     rows={2}
                     value={address}
                     onChange={(e) => setAddress(e.target.value)}
-                    placeholder="যেমন: বাড়ি নং ১২, রোড নং ৫, ব্লক-বি, মিরপুর-১০, ঢাকা"
+                    placeholder="আপনার সম্পূর্ণ ঠিকানা লিখুন"
                     className={`w-full px-4 py-2.5 sm:py-3 rounded-xl border text-sm transition focus:outline-hidden focus:ring-1 bg-[#fafaf8] ${
                       errors.address
                         ? "border-red-400 focus:ring-red-300"
