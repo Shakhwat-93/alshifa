@@ -654,42 +654,54 @@ export default function ShifaLandingPage() {
               <h2>{content.ingredients_heading}</h2>
             </div>
 
-            {/* If product has benefits or landing has features, show dynamic cards */}
-            {productData?.benefits && productData.benefits.length > 0 ? (
-              <ul className="s-ing">
-                {productData.benefits.map((benefit: string, i: number) => (
-                  <li key={i}>
+            {/* 14 Pure Herbal Ingredients */}
+            <ul className="s-ing">
+              {DEFAULT_INGREDIENTS.map((ing, i) => (
+                <li key={i}>
+                  {ing.type === "drop" ? (
                     <svg viewBox="0 0 24 24">
                       <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
                     </svg>
-                    {benefit}
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <ul className="s-ing">
-                {DEFAULT_INGREDIENTS.map((ing, i) => (
-                  <li key={i}>
-                    {ing.type === "drop" ? (
-                      <svg viewBox="0 0 24 24">
-                        <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
-                      </svg>
-                    ) : (
-                      <svg viewBox="0 0 24 24">
-                        <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
-                      </svg>
-                    )}
-                    {ing.name}
-                  </li>
-                ))}
-              </ul>
-            )}
+                  ) : (
+                    <svg viewBox="0 0 24 24">
+                      <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
+                      <path d="M5 19l7-7" />
+                    </svg>
+                  )}
+                  {ing.name}
+                </li>
+              ))}
+            </ul>
 
             <div className="s-hl">
               <b>{productData?.name_primary || content.highlight_title}</b>
               <p>{landingData?.subtitle || content.highlight_subtitle}</p>
             </div>
           </section>
+
+          {/* BENEFITS (উপকারিতা ও কার্যকারিতা) */}
+          {productData?.benefits && productData.benefits.length > 0 && (
+            <section className="s-sec">
+              <div className="s-head center">
+                <span className="s-ico a-pulse">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                </span>
+                <h2>উপকারিতা ও কার্যকারিতা</h2>
+              </div>
+              <ul className="s-ing" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+                {productData.benefits.map((benefit: string, i: number) => (
+                  <li key={i} style={{ padding: "14px 16px" }}>
+                    <svg viewBox="0 0 24 24" style={{ fill: "#0E5A2E" }}>
+                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                    </svg>
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* HOW TO USE */}
           <section className="s-sec">
