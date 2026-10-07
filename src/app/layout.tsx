@@ -3,7 +3,7 @@ import "./globals.css";
 import "./shifa.css";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://shifabd.online"),
+  metadataBase: new URL("https://shifacarebd.online"),
   title: "শিফা পেইন কেয়ার অয়েল | ব্যথামুক্ত স্বাভাবিক জীবনের নিশ্চয়তা",
   description:
     "হাঁটু, কোমর, ঘাড় ও জয়েন্টের দীর্ঘদিনের ব্যথায় ঘরোয়া স্থায়ী সমাধান। ২৭টি দুর্লভ ভেষজ উপাদানে তৈরি ১০০% অরিজিনাল শিফা পেইন কেয়ার অয়েল। সারাদেশে ক্যাশ অন হোম ডেলিভারি।",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "শিফা পেইন কেয়ার অয়েল | মাত্র ১০ মিনিটে জয়েন্ট ও মাংসপেশির ব্যথায় স্থায়ী আরাম",
     description: "পেইনকিলারের ক্ষতিকর পার্শ্বপ্রতিক্রিয়া ভুলে প্রকৃতির স্পর্শে ব্যথামুক্ত থাকুন। ক্যাশ অন ডেলিভারি সুবিধা।",
-    url: "https://shifabd.online",
+    url: "https://shifacarebd.online",
     siteName: "Shifa Care BD",
     images: [
       {
