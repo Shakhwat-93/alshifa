@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       phone,
       address,
       district = "Dhaka",
-      product_name = "আল-শিফা প্রিমিয়াম হেয়ার অয়েল",
+      product_name = "শিফা পেইন কেয়ার অয়েল",
       quantity = 1,
       price = 950,
       delivery_charge = 60,

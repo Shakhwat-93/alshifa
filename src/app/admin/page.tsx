@@ -129,7 +129,7 @@ export default function EnterpriseAdmin() {
     phone: "",
     address: "",
     district: "Dhaka",
-    product_name: "আল-শিফা প্রিমিয়াম হেয়ার অয়েল",
+    product_name: "শিফা পেইন কেয়ার অয়েল",
     quantity: 1,
     price: 950,
     delivery_charge: 60,
@@ -384,7 +384,7 @@ export default function EnterpriseAdmin() {
           phone: "",
           address: "",
           district: "Dhaka",
-          product_name: "আল-শিফা প্রিমিয়াম হেয়ার অয়েল",
+          product_name: "শিফা পেইন কেয়ার অয়েল",
           quantity: 1,
           price: 950,
           delivery_charge: 60,
@@ -1436,9 +1436,9 @@ export default function EnterpriseAdmin() {
                       price: 950,
                       original_price: 1550,
                       stock: 100,
-                      description: "",
-                      images: ["/images/product-main.png"],
-                      benefits: ["চুল পড়া বন্ধ করে", "নতুন চুল গজায়"],
+                      description: "প্রাকৃতিক ভেষজ ব্যথানাশক তেল, যা বাত-ব্যথা, কোমর, ঘাড়, হাঁটু ও মাংসপেশির দীর্ঘস্থায়ী যন্ত্রণা উপশম করতে সহায়তা করে।",
+                      images: ["/images/product-bottle-main.png"],
+                      benefits: ["বাত-ব্যথা ও জয়েন্ট পেইন উপশম করে", "হাঁটু ও কোমর ব্যথায় দ্রুত আরাম দেয়", "মাংসপেশির টান ও ফোলাভাব কমায়"],
                       is_active: true,
                       is_featured: true,
                     });
@@ -1787,7 +1787,7 @@ export default function EnterpriseAdmin() {
                         value={landingForm.title}
                         onChange={(e) => setLandingForm({ ...landingForm, title: e.target.value })}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs font-bold focus:ring-2 focus:ring-[#ff3f60]"
-                        placeholder="চুল পড়া বন্ধে ১০০% প্রাকৃতিক সমাধান"
+                        placeholder="প্রাকৃতিক ভেষজ উপাদানে বাত ও ব্যথামুক্ত জীবনের সেরা সমাধান"
                       />
                     </div>
                     <div>
@@ -1797,7 +1797,7 @@ export default function EnterpriseAdmin() {
                         value={landingForm.subtitle}
                         onChange={(e) => setLandingForm({ ...landingForm, subtitle: e.target.value })}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#ff3f60]"
-                        placeholder="সম্পূর্ণ ভেষজ উপাদানে তৈরি প্রিমিয়াম আল-শিফা কেয়ার অয়েল"
+                        placeholder="শিফা পেইন কেয়ার অয়েল — প্রাকৃতিক ভেষজ ব্যথা নিরাময়ে বিশুদ্ধ সঙ্গী"
                       />
                     </div>
                   </div>
@@ -1808,7 +1808,7 @@ export default function EnterpriseAdmin() {
                       value={landingForm.description}
                       onChange={(e) => setLandingForm({ ...landingForm, description: e.target.value })}
                       className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs focus:ring-2 focus:ring-[#ff3f60]"
-                      placeholder="কোনো ধরনের ক্ষতিকর কেমিক্যাল ছাড়াই প্রাকৃতিক উপায়ে চুলের ঘনত্ব বৃদ্ধি করুন..."
+                      placeholder="শরীরের বিভিন্ন অংশের পুরনো বাত-ব্যথা, কোমর, ঘাড়, জয়েন্ট ও হাঁটুর যন্ত্রণায় নিয়মিত ম্যাসাজে দ্রুত আরামদায়ক অনুভূতি পেতে..."
                     />
                   </div>
                 </div>
@@ -2459,7 +2459,7 @@ export default function EnterpriseAdmin() {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 <tr>
-                  <td className="py-3 px-3 font-semibold text-gray-800">আল-শিফা প্রিমিয়াম হেয়ার অ্যান্ড বডি অয়েল</td>
+                  <td className="py-3 px-3 font-semibold text-gray-800">শিফা পেইন কেয়ার অয়েল (Shifa Pain Care Oil)</td>
                   <td className="py-3 px-3 text-center">{selectedOrder.quantity || 1}</td>
                   <td className="py-3 px-3 text-right font-bold">৳{selectedOrder.grand_total}</td>
                 </tr>

@@ -91,7 +91,7 @@ export async function POST(request: Request) {
 
     // 2. Fetch or fallback product
     let targetProductId = productId;
-    let targetProductName = "আল-শিফা প্রিমিয়াম হেয়ার অয়েল";
+    let targetProductName = "শিফা পেইন কেয়ার অয়েল";
 
     if (!targetProductId) {
       const { data: prod } = await supabaseAdmin

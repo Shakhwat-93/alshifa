@@ -139,7 +139,7 @@ export default function ShifaLandingPage() {
     is_announcement_active: true,
     hotline_number: "01886367377",
     whatsapp_number: "01886367377",
-    whatsapp_default_message: "হ্যালো, আমি আল-শিফা ন্যাচারাল অয়েল সম্পর্কে জানতে চাই।",
+    whatsapp_default_message: "হ্যালো, আমি শিফা পেইন কেয়ার অয়েল সম্পর্কে জানতে চাই।",
   });
 
   const [productData, setProductData] = useState<any>(null);
@@ -479,7 +479,7 @@ export default function ShifaLandingPage() {
   const activeHotline = rawSettings.hotline_number || content.hotline_number || "01886367377";
   const activeWhatsapp = normalizeBDPhone(rawSettings.whatsapp_number || content.whatsapp_number || "01886367377");
   const whatsappMsg = encodeURIComponent(
-    rawSettings.whatsapp_default_message || "হ্যালো, আমি আল-শিফা ন্যাচারাল অয়েল সম্পর্কে জানতে চাই।"
+    rawSettings.whatsapp_default_message || "হ্যালো, আমি শিফা পেইন কেয়ার অয়েল সম্পর্কে জানতে চাই।"
   );
 
   return (
