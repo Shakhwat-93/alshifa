@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
@@ -108,9 +109,20 @@ export async function PATCH(request: Request) {
     const { id, ...updates } = body;
     if (!id) return NextResponse.json({ error: "Product ID required" }, { status: 400 });
 
+    const cleanUpdates: any = { ...updates };
+    if (cleanUpdates.price !== undefined) {
+      cleanUpdates.price = Number(cleanUpdates.price) || 0;
+    }
+    if (cleanUpdates.original_price !== undefined) {
+      cleanUpdates.original_price = cleanUpdates.original_price ? Number(cleanUpdates.original_price) : null;
+    }
+    if (cleanUpdates.stock !== undefined) {
+      cleanUpdates.stock = Number(cleanUpdates.stock) || 0;
+    }
+
     const { data, error } = await supabaseAdmin
       .from("app_products")
-      .update(updates)
+      .update(cleanUpdates)
       .eq("id", id)
       .select()
       .single();

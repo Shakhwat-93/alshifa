@@ -2,6 +2,13 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import confetti from "canvas-confetti";
+import {
+  trackViewItem,
+  trackAddToCart,
+  trackBeginCheckout,
+  trackPurchase,
+  trackContact,
+} from "@/lib/analytics";
 
 // Convert English numbers to Bengali digits
 function toBengaliDigits(num: number | string): string {
@@ -146,12 +153,13 @@ export default function ShifaLandingPage() {
   const [landingData, setLandingData] = useState<any>(null);
   const [reviewsList, setReviewsList] = useState(DEFAULT_REVIEWS);
   const [featuresList, setFeaturesList] = useState<any[]>([]);
-  const [faqList, setFaqList] = useState<any[]>([]);
-  const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   // ---- Fetch Dynamic Content from Supabase ----
   useEffect(() => {
-    fetch("/api/content")
+    fetch(`/api/content?t=${Date.now()}`, {
+      cache: "no-store",
+      headers: { "Cache-Control": "no-cache" },
+    })
       .then((res) => res.json())
       .then((data) => {
         if (data.raw_settings) {
@@ -179,9 +187,6 @@ export default function ShifaLandingPage() {
         }
         if (data.features && data.features.length > 0) {
           setFeaturesList(data.features);
-        }
-        if (data.faq && data.faq.length > 0) {
-          setFaqList(data.faq);
         }
       })
       .catch((e) => console.log("Failed to load dynamic content:", e));
@@ -338,13 +343,57 @@ export default function ShifaLandingPage() {
   // ---- Order Form & Pricing (Single bottle package, 100% Free Delivery) ----
   const [quantity, setQuantity] = useState(1);
 
-  const baseUnitPrice = productData?.price
-    ? Number(productData.price)
-    : parseInt(content.price_current || "950", 10) || 950;
+  const baseUnitPrice =
+    productData && Number(productData.price) > 0
+      ? Number(productData.price)
+      : Number(content.price_current) > 0
+      ? Number(content.price_current)
+      : 950;
+
+  const baseOriginalPrice =
+    productData && Number(productData.original_price) > 0
+      ? Number(productData.original_price)
+      : Number(content.price_regular) > 0
+      ? Number(content.price_regular)
+      : 1450;
 
   const subtotal = quantity * baseUnitPrice;
   const deliveryCharge = 0; // 100% Free delivery nationwide
   const grandTotal = subtotal;
+
+  // Analytics tracking guards
+  const hasFiredViewItem = useRef(false);
+  const hasFiredBeginCheckout = useRef(false);
+
+  useEffect(() => {
+    if (baseUnitPrice > 0 && !hasFiredViewItem.current) {
+      hasFiredViewItem.current = true;
+      trackViewItem({
+        item_id: productData?.id || "shifa-001",
+        item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
+        price: baseUnitPrice,
+        quantity: 1,
+      });
+    }
+  }, [baseUnitPrice, productData, content.product_name]);
+
+  const triggerBeginCheckout = useCallback(() => {
+    if (!hasFiredBeginCheckout.current) {
+      hasFiredBeginCheckout.current = true;
+      trackBeginCheckout({
+        currency: "BDT",
+        value: grandTotal,
+        items: [
+          {
+            item_id: productData?.id || "shifa-001",
+            item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
+            price: baseUnitPrice,
+            quantity,
+          },
+        ],
+      });
+    }
+  }, [grandTotal, productData, content.product_name, baseUnitPrice, quantity]);
 
   // Form Inputs & Validation
   const [formData, setFormData] = useState({
@@ -444,16 +493,22 @@ export default function ShifaLandingPage() {
           total: data.order.total_price,
         });
 
-        // Trigger Meta Pixel Purchase event if present
-        if (typeof window !== "undefined" && (window as any).fbq) {
-          try {
-            (window as any).fbq("track", "Purchase", {
-              value: grandTotal,
-              currency: "BDT",
-              content_name: content.product_name,
-            });
-          } catch {}
-        }
+        // Trigger Centralized eCommerce Purchase Event (GA4 + Meta Pixel) with Guaranteed Deduplication
+        trackPurchase({
+          transaction_id: data.order.order_id,
+          value: Number(data.order.total_price) || grandTotal,
+          currency: "BDT",
+          shipping: deliveryCharge,
+          items: [
+            {
+              item_id: productData?.id || "shifa-001",
+              item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
+              price: baseUnitPrice,
+              quantity,
+              item_variant: "১ বোতল",
+            },
+          ],
+        });
 
         try {
           confetti({
@@ -477,10 +532,6 @@ export default function ShifaLandingPage() {
   };
 
   const activeHotline = rawSettings.hotline_number || content.hotline_number || "01886367377";
-  const activeWhatsapp = normalizeBDPhone(rawSettings.whatsapp_number || content.whatsapp_number || "01886367377");
-  const whatsappMsg = encodeURIComponent(
-    rawSettings.whatsapp_default_message || "হ্যালো, আমি শিফা পেইন কেয়ার অয়েল সম্পর্কে জানতে চাই।"
-  );
 
   return (
     <div className="w-full bg-white text-[#1E2B22]">
@@ -490,7 +541,9 @@ export default function ShifaLandingPage() {
       {rawSettings.is_announcement_active !== false && rawSettings.announcement_text && (
         <div className="s-announcement-bar">
           <span>{rawSettings.announcement_text}</span>
-          <a href={`tel:${activeHotline}`}>কল করুন: {activeHotline}</a>
+          <a href={`tel:${activeHotline}`} onClick={() => trackContact("phone", activeHotline)}>
+            কল করুন: {activeHotline}
+          </a>
         </div>
       )}
 
@@ -679,30 +732,6 @@ export default function ShifaLandingPage() {
             </div>
           </section>
 
-          {/* BENEFITS (উপকারিতা ও কার্যকারিতা) */}
-          {productData?.benefits && productData.benefits.length > 0 && (
-            <section className="s-sec">
-              <div className="s-head center">
-                <span className="s-ico a-pulse">
-                  <svg viewBox="0 0 24 24">
-                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                  </svg>
-                </span>
-                <h2>উপকারিতা ও কার্যকারিতা</h2>
-              </div>
-              <ul className="s-ing" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
-                {productData.benefits.map((benefit: string, i: number) => (
-                  <li key={i} style={{ padding: "14px 16px" }}>
-                    <svg viewBox="0 0 24 24" style={{ fill: "#0E5A2E" }}>
-                      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
-                    </svg>
-                    <span>{benefit}</span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
           {/* HOW TO USE */}
           <section className="s-sec">
             <div className="s-use">
@@ -849,42 +878,6 @@ export default function ShifaLandingPage() {
             </div>
           </section>
 
-          {/* DYNAMIC FAQ SECTION */}
-          {faqList && faqList.length > 0 && (
-            <section className="s-sec">
-              <div className="s-head center">
-                <span className="s-ico a-pulse">
-                  <svg viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-                    <line x1="12" y1="17" x2="12.01" y2="17" />
-                  </svg>
-                </span>
-                <h2>প্রায়শই জিজ্ঞাসিত প্রশ্নাবলী (FAQ)</h2>
-              </div>
-              <div className="s-faq-container">
-                {faqList.map((faqItem: any, idx: number) => {
-                  const isOpen = openFaqIndex === idx;
-                  return (
-                    <div key={idx} className={`s-faq-card ${isOpen ? "open" : ""}`}>
-                      <button
-                        type="button"
-                        className="s-faq-btn"
-                        onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                      >
-                        <span>{faqItem.q}</span>
-                        <svg className="s-faq-icon" viewBox="0 0 24 24" fill="none">
-                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                      {isOpen && <div className="s-faq-answer">{faqItem.a}</div>}
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          )}
-
           {/* TIMER */}
           <div className="s-timer">
             <h3>{content.timer_heading}</h3>
@@ -927,7 +920,11 @@ export default function ShifaLandingPage() {
             এখনই অর্ডার করুন
           </a>
           <div>
-            <a className="s-call" href={`tel:${activeHotline}`}>
+            <a
+              className="s-call"
+              href={`tel:${activeHotline}`}
+              onClick={() => trackContact("phone", activeHotline)}
+            >
               <svg viewBox="0 0 24 24">
                 <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
               </svg>
@@ -982,7 +979,16 @@ export default function ShifaLandingPage() {
                       <button
                         type="button"
                         className="s-cf-qty-btn"
-                        onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                        onClick={() => {
+                          const nextQ = Math.max(1, quantity - 1);
+                          setQuantity(nextQ);
+                          trackAddToCart({
+                            item_id: productData?.id || "shifa-001",
+                            item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
+                            price: baseUnitPrice,
+                            quantity: nextQ,
+                          });
+                        }}
                       >
                         −
                       </button>
@@ -995,13 +1001,29 @@ export default function ShifaLandingPage() {
                       <button
                         type="button"
                         className="s-cf-qty-btn"
-                        onClick={() => setQuantity((q) => q + 1)}
+                        onClick={() => {
+                          const nextQ = quantity + 1;
+                          setQuantity(nextQ);
+                          trackAddToCart({
+                            item_id: productData?.id || "shifa-001",
+                            item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
+                            price: baseUnitPrice,
+                            quantity: nextQ,
+                          });
+                        }}
                       >
                         +
                       </button>
                     </div>
-                    <div className="s-cf-prod-price">
-                      ৳ {toBengaliDigits(subtotal)}
+                    <div className="s-cf-prod-price flex flex-col items-end justify-center">
+                      {baseOriginalPrice > baseUnitPrice && (
+                        <span className="text-[11px] sm:text-xs text-stone-400 line-through font-normal">
+                          ৳ {toBengaliDigits(baseOriginalPrice * quantity)}
+                        </span>
+                      )}
+                      <span className="text-base sm:text-lg font-black text-emerald-800">
+                        ৳ {toBengaliDigits(subtotal)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1019,6 +1041,7 @@ export default function ShifaLandingPage() {
                     ref={nameInputRef}
                     type="text"
                     value={formData.name}
+                    onFocus={triggerBeginCheckout}
                     onChange={(e) => {
                       setFormData({ ...formData, name: e.target.value });
                       if (errors.name) setErrors({ ...errors, name: "" });
@@ -1039,6 +1062,7 @@ export default function ShifaLandingPage() {
                     ref={phoneInputRef}
                     type="tel"
                     value={formData.phone}
+                    onFocus={triggerBeginCheckout}
                     onChange={(e) => {
                       setFormData({ ...formData, phone: e.target.value });
                       if (errors.phone) setErrors({ ...errors, phone: "" });
@@ -1059,6 +1083,7 @@ export default function ShifaLandingPage() {
                     ref={addressInputRef}
                     type="text"
                     value={formData.address}
+                    onFocus={triggerBeginCheckout}
                     onChange={(e) => {
                       setFormData({ ...formData, address: e.target.value });
                       if (errors.address) setErrors({ ...errors, address: "" });
@@ -1072,7 +1097,7 @@ export default function ShifaLandingPage() {
                 </div>
               </div>
 
-              {/* Free Delivery Nationwide */}
+              {/* Delivery Method */}
               <div className="s-cf-group">
                 <h3 className="s-cf-heading">ডেলিভারি মেথড</h3>
                 <div className="s-cf-shipping-row">
@@ -1082,14 +1107,9 @@ export default function ShifaLandingPage() {
                     readOnly
                     className="s-cf-radio"
                   />
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-                    <span style={{ fontWeight: 600, color: "#0E5A2E" }}>
-                      সারাদেশে ক্যাশ অন ফ্রি হোম ডেলিভারি
-                    </span>
-                    <span style={{ fontWeight: 700, fontSize: "14px", background: "#D6EBD3", color: "#08401F", padding: "4px 10px", borderRadius: "20px" }}>
-                      ১০০% ফ্রি ডেলিভারি (৳০)
-                    </span>
-                  </div>
+                  <span style={{ fontWeight: 600, color: "#0E5A2E" }}>
+                    সারাদেশে ক্যাশ অন ডেলিভারি
+                  </span>
                 </div>
               </div>
 
@@ -1123,7 +1143,7 @@ export default function ShifaLandingPage() {
                     <tr>
                       <th>ডেলিভারি চার্জ</th>
                       <td className="val" style={{ color: "#0E5A2E", fontWeight: 700 }}>
-                        ফ্রি ডেলিভারি (৳০)
+                        ৳ {toBengaliDigits(deliveryCharge)}
                       </td>
                     </tr>
                     <tr className="total">
@@ -1156,7 +1176,7 @@ export default function ShifaLandingPage() {
                   <span>অর্ডার প্রসেস হচ্ছে...</span>
                 ) : (
                   <span>
-                    অর্ডার কনফার্ম করুন - ৳ {toBengaliDigits(grandTotal)} (ফ্রি ডেলিভারি)
+                    অর্ডার কনফার্ম করুন - ৳ {toBengaliDigits(grandTotal)}
                   </span>
                 )}
               </button>
@@ -1206,16 +1226,12 @@ export default function ShifaLandingPage() {
               </p>
             </div>
 
-            <p className="text-xs text-stone-500 mb-6">
-              আমাদের প্রতিনিধি শীঘ্রই আপনার সাথে কল করে অর্ডার নিশ্চিত করবেন। পণ্য হাতে পেয়ে দেখে মূল্য পরিশোধ করবেন।
-            </p>
-
             <button
               onClick={() => {
                 setOrderSuccess(null);
                 setFormData({ name: "", address: "", phone: "" });
               }}
-              className="w-full bg-[#0E5A2E] hover:bg-[#2E8B4A] text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-lg text-lg"
+              className="w-full bg-[#0E5A2E] hover:bg-[#2E8B4A] text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-lg text-lg cursor-pointer"
             >
               ঠিক আছে
             </button>
@@ -1223,22 +1239,7 @@ export default function ShifaLandingPage() {
         </div>
       )}
 
-      {/* ========================================================= */}
-      {/* 4. FLOATING WHATSAPP BUTTON                               */}
-      {/* ========================================================= */}
-      {activeWhatsapp && (
-        <a
-          href={`https://wa.me/880${activeWhatsapp}?text=${whatsappMsg}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="WhatsApp Support"
-          className="s-floating-whatsapp"
-        >
-          <svg viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg">
-            <path d="M380.9 97.1C339 55.1 283.2 32 223.9 32c-122.4 0-222 99.6-222 222 0 39.1 10.2 77.3 29.6 111L0 480l117.7-30.9c32.4 17.7 68.9 27 106.1 27h.1c122.3 0 224.1-99.6 224.1-222 0-59.3-25.2-115-67.1-157zm-157 341.6c-33.2 0-65.7-8.9-94-25.7l-6.7-4-69.8 18.3L72 359.2l-4.4-7c-18.5-29.4-28.2-63.3-28.2-98.2 0-101.7 82.8-184.5 184.6-184.5 49.3 0 95.6 19.2 130.4 54.1 34.8 34.9 56.2 81.2 56.1 130.5 0 101.8-84.9 184.6-186.6 184.6zm101.2-138.2c-5.5-2.8-32.8-16.2-37.9-18-5.1-1.9-8.8-2.8-12.5 2.8-3.7 5.6-14.3 18-17.6 21.8-3.2 3.7-6.5 4.2-12 1.4-32.6-16.3-54-29.1-75.5-66-5.7-9.8 5.7-9.1 16.3-30.3 1.8-3.7.9-6.9-.5-9.7-1.4-2.8-12.5-30.1-17.1-41.2-4.5-10.8-9.1-9.3-12.5-9.5-3.2-.2-6.9-.2-10.6-.2-3.7 0-9.7 1.4-14.8 6.9-5.1 5.6-19.4 19-19.4 46.3 0 27.3 19.9 53.7 22.6 57.4 2.8 3.7 39.1 59.7 94.8 83.8 35.2 15.2 49 16.5 66.6 13.9 10.7-1.6 32.8-13.4 37.4-26.4 4.6-13 4.6-24.1 3.2-26.4-1.3-2.5-5-3.9-10.5-6.6z" />
-          </svg>
-        </a>
-      )}
+
     </div>
   );
 }

@@ -40,6 +40,8 @@ export const viewport: Viewport = {
   themeColor: "#064e3b",
 };
 
+import AnalyticsProvider from "@/components/AnalyticsProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -60,7 +62,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen bg-[#ffffff] text-[#1E2B22] selection:bg-emerald-100 selection:text-emerald-900 font-hind">
-        {children}
+        <AnalyticsProvider>
+          {children}
+        </AnalyticsProvider>
       </body>
     </html>
   );

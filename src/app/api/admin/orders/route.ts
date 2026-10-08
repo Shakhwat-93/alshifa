@@ -49,7 +49,8 @@ export async function POST(request: Request) {
       price = 950,
       delivery_charge = 60,
       note = "",
-      status = "pending",
+      status = "processing",
+      assigned_to = null,
     } = body;
 
     const orderNumber = "ORD-" + Math.floor(100000 + Math.random() * 900000);
@@ -68,6 +69,7 @@ export async function POST(request: Request) {
         delivery_charge,
         grand_total: grandTotal,
         status,
+        assigned_to: assigned_to || (status !== "processing" && status !== "completed" && status !== "cancelled" && status !== "trash" ? status : null),
         note,
         courier_ratio_data: {
           success_rate: 98,
@@ -97,15 +99,34 @@ export async function POST(request: Request) {
   }
 }
 
-// PATCH: Update order status, courier info, notes
+// PATCH: Update order status, courier info, notes, items, etc. (single or bulk)
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { id, ...updates } = body;
+    const { id, ids, items, ...updates } = body;
+
+    // Bulk update support
+    if (ids && Array.isArray(ids) && ids.length > 0) {
+      const { data, error } = await supabaseAdmin
+        .from("app_orders")
+        .update(updates)
+        .in("id", ids)
+        .select();
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, orders: data, count: ids.length });
+    }
 
     if (!id) {
-      return NextResponse.json({ error: "Order ID required" }, { status: 400 });
+      return NextResponse.json({ error: "Order ID or IDs required" }, { status: 400 });
     }
+
+    // Prevent overwriting primary immutable fields if sent
+    delete updates.id;
+    delete updates.created_at;
 
     const { data, error } = await supabaseAdmin
       .from("app_orders")
@@ -118,17 +139,58 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, order: data });
+    // Update order items if provided
+    if (items && Array.isArray(items)) {
+      await supabaseAdmin.from("app_order_items").delete().eq("order_id", id);
+      if (items.length > 0) {
+        await supabaseAdmin.from("app_order_items").insert(
+          items.map((it: any) => ({
+            order_id: id,
+            product_name: it.product_name || "শিফা পেইন কেয়ার অয়েল",
+            quantity: Number(it.quantity) || 1,
+            price: Number(it.price) || 0,
+            selected_variant: it.selected_variant || null,
+            product_id: it.product_id || null,
+          }))
+        );
+      }
+    }
+
+    // Retrieve fresh items
+    const { data: orderItems } = await supabaseAdmin
+      .from("app_order_items")
+      .select("*")
+      .eq("order_id", id);
+
+    return NextResponse.json({
+      success: true,
+      order: {
+        ...data,
+        items: orderItems || [],
+      },
+    });
   } catch (err: any) {
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
   }
 }
 
-// DELETE: Delete order
+// DELETE: Delete order (single or bulk)
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const ids = searchParams.get("ids");
+
+    if (ids) {
+      const idList = ids.split(",").map((s) => s.trim()).filter(Boolean);
+      if (idList.length > 0) {
+        const { error } = await supabaseAdmin.from("app_orders").delete().in("id", idList);
+        if (error) {
+          return NextResponse.json({ error: error.message }, { status: 500 });
+        }
+        return NextResponse.json({ success: true, count: idList.length });
+      }
+    }
 
     if (!id) {
       return NextResponse.json({ error: "Order ID required" }, { status: 400 });

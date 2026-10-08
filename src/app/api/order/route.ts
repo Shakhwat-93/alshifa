@@ -74,7 +74,7 @@ export async function POST(request: Request) {
         delivery_charge: delCharge,
         discount_amount: 0,
         grand_total: grandTotal,
-        status: "pending",
+        status: "processing",
         note: note || null,
         courier_ratio_data: null,
       })
@@ -93,23 +93,21 @@ export async function POST(request: Request) {
     let targetProductId = productId;
     let targetProductName = "শিফা পেইন কেয়ার অয়েল";
 
-    if (!targetProductId) {
-      const { data: prod } = await supabaseAdmin
-        .from("app_products")
-        .select("id, name_primary, stock")
-        .limit(1)
-        .single();
-      if (prod) {
-        targetProductId = prod.id;
-        targetProductName = prod.name_primary;
+    const prodQuery = targetProductId
+      ? supabaseAdmin.from("app_products").select("id, name_primary, stock").eq("id", targetProductId).maybeSingle()
+      : supabaseAdmin.from("app_products").select("id, name_primary, stock").limit(1).maybeSingle();
 
-        // Decrement stock
-        if (prod.stock !== undefined && prod.stock !== null) {
-          await supabaseAdmin
-            .from("app_products")
-            .update({ stock: Math.max(0, prod.stock - qty) })
-            .eq("id", prod.id);
-        }
+    const { data: prod } = await prodQuery;
+    if (prod) {
+      targetProductId = prod.id;
+      targetProductName = prod.name_primary;
+
+      // Decrement stock
+      if (prod.stock !== undefined && prod.stock !== null) {
+        await supabaseAdmin
+          .from("app_products")
+          .update({ stock: Math.max(0, prod.stock - qty) })
+          .eq("id", prod.id);
       }
     }
 
