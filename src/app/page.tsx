@@ -105,10 +105,33 @@ const DEFAULT_INGREDIENTS = [
   { name: "পেপারমিন্ট অয়েল", type: "drop" },
 ];
 
+const DEFAULT_SECTIONS_ORDER = [
+  "announcement",
+  "hero",
+  "gallery",
+  "offer_banner",
+  "badges",
+  "intro",
+  "ingredients",
+  "usage",
+  "certification",
+  "mid_cta",
+  "reviews",
+  "timer",
+  "final_cta",
+  "checkout",
+];
+
 export default function ShifaLandingPage() {
-  // ---- Dynamic Editable State from Supabase ----
+  // Preview mode detection
+  const [isPreview, setIsPreview] = useState(false);
+
+  // ---- Dynamic CMS Data from Database ----
+  const [sectionsOrder, setSectionsOrder] = useState<string[]>(DEFAULT_SECTIONS_ORDER);
+  const [sectionsData, setSectionsData] = useState<Record<string, any>>({});
+
   const [content, setContent] = useState<Record<string, string>>({
-    hero_tag: "Natural Care, Everyday Comfort",
+    hero_tag: "১০০% প্রাকৃতিক ও নিরাপদ",
     hero_title: "শিফা পেইন কেয়ার অয়েল",
     hero_subtitle: "প্রকৃতির ছোঁয়ায় ব্যথা নিরাময়ের বিশ্বস্ত সঙ্গী",
     hero_intro:
@@ -152,11 +175,25 @@ export default function ShifaLandingPage() {
   const [productData, setProductData] = useState<any>(null);
   const [landingData, setLandingData] = useState<any>(null);
   const [reviewsList, setReviewsList] = useState(DEFAULT_REVIEWS);
-  const [featuresList, setFeaturesList] = useState<any[]>([]);
+  const [ingredientsList, setIngredientsList] = useState(DEFAULT_INGREDIENTS);
+  const [badgesList, setBadgesList] = useState<any[]>([
+    { title: "শরীরের ব্যথা নিরাময়ে তেল", icon: "drop" },
+    { title: "২৭টি ভেষজ প্রাকৃতিক উপাদানে তৈরি", icon: "leaf" },
+    { title: "পরিবেশবান্ধব ও নিরাপদ", icon: "recycle" },
+  ]);
+
+  // Check URL query parameters for preview mode on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setIsPreview(params.get("preview") === "true" || params.get("draft") === "true");
+    }
+  }, []);
 
   // ---- Fetch Dynamic Content from Supabase ----
   useEffect(() => {
-    fetch(`/api/content?t=${Date.now()}`, {
+    const previewParam = isPreview ? "&preview=true" : "";
+    fetch(`/api/content?t=${Date.now()}${previewParam}`, {
       cache: "no-store",
       headers: { "Cache-Control": "no-cache" },
     })
@@ -174,33 +211,48 @@ export default function ShifaLandingPage() {
         if (data.landing) {
           setLandingData(data.landing);
         }
-        if (data.reviews && data.reviews.length > 0) {
+        if (data.sections_order && data.sections_order.length > 0) {
+          setSectionsOrder(data.sections_order);
+        }
+        if (data.sections_data && Object.keys(data.sections_data).length > 0) {
+          setSectionsData(data.sections_data);
+          
+          // Sync specific section repeatable items
+          if (data.sections_data.reviews?.items?.length > 0) {
+            setReviewsList(data.sections_data.reviews.items);
+          }
+          if (data.sections_data.ingredients?.items?.length > 0) {
+            setIngredientsList(data.sections_data.ingredients.items);
+          }
+          if (data.sections_data.badges?.items?.length > 0) {
+            setBadgesList(data.sections_data.badges.items);
+          }
+        } else if (data.reviews && data.reviews.length > 0) {
           setReviewsList(
             data.reviews.map((r: any, idx: number) => ({
               id: r.id || idx + 1,
               name: r.name || "সম্মানিত গ্রাহক",
               location: r.location || "বাংলাদেশ",
               image: r.image_url || r.image || "/images/review-rahima-khatun.avif",
-              text: r.review || r.review_text || "",
+              text: r.review || r.text || "",
             }))
           );
         }
-        if (data.features && data.features.length > 0) {
-          setFeaturesList(data.features);
-        }
       })
       .catch((e) => console.log("Failed to load dynamic content:", e));
-  }, []);
+  }, [isPreview]);
 
   // Dynamic Product Bottle Image with Safe Fallback
   const productMainImg =
-    productData?.images?.[0] && productData.images[0].trim() !== ""
-      ? productData.images[0]
-      : "/images/product-bottle-main.png";
+    sectionsData?.hero?.image_url ||
+    productData?.images?.[0] ||
+    "/images/product-bottle-main.png";
 
-  // ---- Dynamic Gallery Images ----
+  // Dynamic Gallery Images
   const galleryImages =
-    productData?.images && productData.images.length > 1
+    sectionsData?.gallery?.items && sectionsData.gallery.items.length > 0
+      ? sectionsData.gallery.items
+      : productData?.images && productData.images.length > 1
       ? productData.images.map((img: string, i: number) => ({
           src: img,
           alt: `${content.product_name} ছবি ${i + 1}`,
@@ -294,8 +346,11 @@ export default function ShifaLandingPage() {
     }
   };
 
-  // ---- Countdown Timer (Persistent hours from settings) ----
-  const timerHours = parseInt(content.timer_hours || "5", 10) || 5;
+  // ---- Countdown Timer (Persistent hours from settings or CMS) ----
+  const timerHours = parseInt(
+    sectionsData?.timer?.duration_hours || content.timer_hours || "5",
+    10
+  ) || 5;
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: timerHours, m: 0, s: 0 });
 
   useEffect(() => {
@@ -531,36 +586,53 @@ export default function ShifaLandingPage() {
     }
   };
 
-  const activeHotline = rawSettings.hotline_number || content.hotline_number || "01886367377";
+  const activeHotline =
+    sectionsData?.announcement?.phone ||
+    sectionsData?.final_cta?.phone ||
+    rawSettings.hotline_number ||
+    content.hotline_number ||
+    "01886367377";
 
-  return (
-    <div className="w-full bg-white text-[#1E2B22]">
-      {/* ========================================================= */}
-      {/* 0. DYNAMIC ANNOUNCEMENT BAR                               */}
-      {/* ========================================================= */}
-      {rawSettings.is_announcement_active !== false && rawSettings.announcement_text && (
-        <div className="s-announcement-bar">
-          <span>{rawSettings.announcement_text}</span>
-          <a href={`tel:${activeHotline}`} onClick={() => trackContact("phone", activeHotline)}>
-            কল করুন: {activeHotline}
-          </a>
-        </div>
-      )}
+  // =========================================================================
+  // DYNAMIC SECTION RENDERERS
+  // =========================================================================
 
-      {/* ========================================================= */}
-      {/* 1. ORIGINAL SHIFA LANDING PAGE CONTAINER (#shifa-lp)      */}
-      {/* ========================================================= */}
-      <div id="shifa-lp">
-        {/* ---------- TOP SECTION (HERO + GALLERY + OFFER) ---------- */}
-        <div className="s-top">
-          {/* HERO */}
-          <section className="s-hero">
+  const renderSection = (key: string) => {
+    const sData = sectionsData[key] || {};
+    if (sData.visible === false) return null;
+
+    switch (key) {
+      // 0. ANNOUNCEMENT BAR
+      case "announcement": {
+        const annText = sData.text || rawSettings.announcement_text;
+        if (!annText) return null;
+        return (
+          <div key="announcement" className="s-announcement-bar">
+            <span>{annText}</span>
+            <a href={`tel:${activeHotline}`} onClick={() => trackContact("phone", activeHotline)}>
+              {sData.link_text || "কল করুন: "} {activeHotline}
+            </a>
+          </div>
+        );
+      }
+
+      // 1. HERO SECTION
+      case "hero": {
+        const heroTag = sData.badge_text || (landingData?.subtitle ? "১০০% প্রাকৃতিক ও নিরাপদ" : content.hero_tag);
+        const heroTitle = sData.title || landingData?.title || productData?.name_primary || content.hero_title;
+        const heroSubtitle = sData.subtitle || landingData?.subtitle || productData?.name_secondary || content.hero_subtitle;
+        const heroIntro = sData.description || landingData?.description || productData?.description || content.hero_intro;
+        const heroCtaText = sData.cta_text || "এখনই অর্ডার করুন";
+        const heroCtaUrl = sData.cta_url || "#checkout";
+
+        return (
+          <section key="hero" className="s-hero">
             <div className="s-hero-txt">
-              <span className="s-tag">{landingData?.subtitle ? "১০০% প্রাকৃতিক ও নিরাপদ" : content.hero_tag}</span>
-              <h1>{landingData?.title || productData?.name_primary || content.hero_title}</h1>
-              <p className="s-sub">{landingData?.subtitle || productData?.name_secondary || content.hero_subtitle}</p>
-              <p className="s-intro">{landingData?.description || productData?.description || content.hero_intro}</p>
-              <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
+              <span className="s-tag">{heroTag}</span>
+              <h1>{heroTitle}</h1>
+              <p className="s-sub">{heroSubtitle}</p>
+              <p className="s-intro">{heroIntro}</p>
+              <a className="s-btn s-order" href={heroCtaUrl} onClick={scrollToCheckout}>
                 <svg fill="none" viewBox="0 0 24 24">
                   <path
                     d="M3 4h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1L21 8H6.3"
@@ -572,12 +644,12 @@ export default function ShifaLandingPage() {
                   <circle cx="9.5" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
                   <circle cx="17" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
                 </svg>
-                এখনই অর্ডার করুন
+                {heroCtaText}
               </a>
             </div>
             <div className="s-hero-img">
               <img
-                alt={content.hero_title}
+                alt={sData.image_alt || heroTitle}
                 src={productMainImg}
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "/images/product-bottle-main.png";
@@ -586,9 +658,14 @@ export default function ShifaLandingPage() {
               />
             </div>
           </section>
+        );
+      }
 
-          {/* IMAGE SLIDER */}
+      // 2. IMAGE GALLERY SLIDER
+      case "gallery": {
+        return (
           <div
+            key="gallery"
             className="s-gal"
             onTouchStart={handleGalTouchStart}
             onTouchEnd={handleGalTouchEnd}
@@ -603,7 +680,7 @@ export default function ShifaLandingPage() {
               {galleryImages.map((img: any, i: number) => (
                 <img
                   key={i}
-                  alt={img.alt}
+                  alt={img.alt || "শিফা পেইন কেয়ার অয়েল"}
                   src={img.src}
                   loading={i === 0 ? "eager" : "lazy"}
                 />
@@ -619,10 +696,14 @@ export default function ShifaLandingPage() {
               ))}
             </div>
           </div>
+        );
+      }
 
-          {/* OFFER BUTTON */}
-          <div className="s-offer">
-            <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
+      // 3. QUICK OFFER BUTTON
+      case "offer_banner": {
+        return (
+          <div key="offer_banner" className="s-offer">
+            <a className="s-btn s-order" href={sData.cta_url || "#checkout"} onClick={scrollToCheckout}>
               <svg fill="none" viewBox="0 0 24 24">
                 <path
                   d="M3 4h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1L21 8H6.3"
@@ -634,15 +715,16 @@ export default function ShifaLandingPage() {
                 <circle cx="9.5" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
                 <circle cx="17" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
               </svg>
-              এখনই অর্ডার করুন
+              {sData.cta_text || "এখনই অর্ডার করুন"}
             </a>
           </div>
-        </div>
+        );
+      }
 
-        {/* ---------- MAIN WRAPPER ---------- */}
-        <div className="s-wrap">
-          {/* BADGES */}
-          <div className="s-badges">
+      // 4. TRUST BADGES
+      case "badges": {
+        return (
+          <div key="badges" className="s-badges">
             <div className="s-badge">
               <span className="s-ico oil a-drip">
                 <svg viewBox="0 0 24 24">
@@ -650,7 +732,7 @@ export default function ShifaLandingPage() {
                   <path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5" />
                 </svg>
               </span>
-              <b>{featuresList[0]?.title || content.badge_1}</b>
+              <b>{badgesList[0]?.title || content.badge_1}</b>
             </div>
             <div className="s-badge">
               <span className="s-ico a-sway">
@@ -659,7 +741,7 @@ export default function ShifaLandingPage() {
                   <path d="M5 19l7-7" />
                 </svg>
               </span>
-              <b>{featuresList[1]?.title || content.badge_2}</b>
+              <b>{badgesList[1]?.title || content.badge_2}</b>
             </div>
             <div className="s-badge">
               <span className="s-ico a-spin">
@@ -672,12 +754,18 @@ export default function ShifaLandingPage() {
                   <path d="M3 15.5L5 19h3" />
                 </svg>
               </span>
-              <b>{featuresList[2]?.title || content.badge_3}</b>
+              <b>{badgesList[2]?.title || content.badge_3}</b>
             </div>
           </div>
+        );
+      }
 
-          {/* INTRO */}
-          <section className="s-sec">
+      // 5. INTRO
+      case "intro": {
+        const introTitle = sData.title || content.intro_heading;
+        const introText = sData.text || productData?.description || landingData?.description || content.intro_text;
+        return (
+          <section key="intro" className="s-sec">
             <div className="s-intro-box">
               <div className="s-head center">
                 <span className="s-ico a-pulse">
@@ -687,16 +775,22 @@ export default function ShifaLandingPage() {
                     <path d="M12 7.5v.5" />
                   </svg>
                 </span>
-                <h2>{content.intro_heading}</h2>
+                <h2>{introTitle}</h2>
               </div>
-              <p className="s-text">
-                {productData?.description || landingData?.description || content.intro_text}
-              </p>
+              <p className="s-text">{introText}</p>
             </div>
           </section>
+        );
+      }
 
-          {/* DYNAMIC BENEFITS / INGREDIENTS */}
-          <section className="s-sec">
+      // 6. INGREDIENTS
+      case "ingredients": {
+        const ingTitle = sData.title || content.ingredients_heading;
+        const hlTitle = sData.highlight_title || productData?.name_primary || content.highlight_title;
+        const hlSubtitle = sData.highlight_subtitle || landingData?.subtitle || content.highlight_subtitle;
+
+        return (
+          <section key="ingredients" className="s-sec">
             <div className="s-head center">
               <span className="s-ico a-sway">
                 <svg viewBox="0 0 24 24">
@@ -704,12 +798,11 @@ export default function ShifaLandingPage() {
                   <path d="M5 19l7-7" />
                 </svg>
               </span>
-              <h2>{content.ingredients_heading}</h2>
+              <h2>{ingTitle}</h2>
             </div>
 
-            {/* 14 Pure Herbal Ingredients */}
             <ul className="s-ing">
-              {DEFAULT_INGREDIENTS.map((ing, i) => (
+              {ingredientsList.map((ing: any, i: number) => (
                 <li key={i}>
                   {ing.type === "drop" ? (
                     <svg viewBox="0 0 24 24">
@@ -727,13 +820,19 @@ export default function ShifaLandingPage() {
             </ul>
 
             <div className="s-hl">
-              <b>{productData?.name_primary || content.highlight_title}</b>
-              <p>{landingData?.subtitle || content.highlight_subtitle}</p>
+              <b>{hlTitle}</b>
+              <p>{hlSubtitle}</p>
             </div>
           </section>
+        );
+      }
 
-          {/* HOW TO USE */}
-          <section className="s-sec">
+      // 7. USAGE
+      case "usage": {
+        const useTitle = sData.title || content.usage_heading;
+        const useText = sData.text || content.usage_text;
+        return (
+          <section key="usage" className="s-sec">
             <div className="s-use">
               <div className="s-head">
                 <span className="s-ico oil a-drip">
@@ -742,14 +841,20 @@ export default function ShifaLandingPage() {
                     <path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5" />
                   </svg>
                 </span>
-                <h2>{content.usage_heading}</h2>
+                <h2>{useTitle}</h2>
               </div>
-              <p className="s-text">{content.usage_text}</p>
+              <p className="s-text">{useText}</p>
             </div>
           </section>
+        );
+      }
 
-          {/* CERTIFICATE */}
-          <section className="s-sec">
+      // 8. CERTIFICATION
+      case "certification": {
+        const certTitle = sData.title || content.cert_heading;
+        const certImg = sData.image_url || "/images/certification-approval.jpg";
+        return (
+          <section key="certification" className="s-sec">
             <div className="s-head center">
               <span className="s-ico a-pulse">
                 <svg viewBox="0 0 24 24">
@@ -758,24 +863,30 @@ export default function ShifaLandingPage() {
                   <path d="M8.5 14l-1.5 7 5-2.5 5 2.5-1.5-7" />
                 </svg>
               </span>
-              <h2>{content.cert_heading}</h2>
+              <h2>{certTitle}</h2>
             </div>
             <div className="s-cert">
               <img
-                alt="শিফা পেইন কেয়ার অয়েল সার্টিফিকেট"
-                src="/images/certification-approval.jpg"
+                alt={sData.image_alt || "শিফা পেইন কেয়ার অয়েল সার্টিফিকেট"}
+                src={certImg}
                 loading="lazy"
               />
             </div>
           </section>
+        );
+      }
 
-          {/* MID CTA */}
-          <div className="s-mid">
+      // 9. MID CTA
+      case "mid_cta": {
+        const midTitle = sData.title || landingData?.title || productData?.name_primary || content.hero_title;
+        const midSub = sData.subtitle || landingData?.subtitle || content.hero_subtitle;
+        return (
+          <div key="mid_cta" className="s-mid">
             <p>
-              {landingData?.title || productData?.name_primary || content.hero_title}
-              <small>{landingData?.subtitle || content.hero_subtitle}</small>
+              {midTitle}
+              <small>{midSub}</small>
             </p>
-            <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
+            <a className="s-btn s-order" href={sData.cta_url || "#checkout"} onClick={scrollToCheckout}>
               <svg fill="none" viewBox="0 0 24 24">
                 <path
                   d="M3 4h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1L21 8H6.3"
@@ -787,19 +898,24 @@ export default function ShifaLandingPage() {
                 <circle cx="9.5" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
                 <circle cx="17" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
               </svg>
-              এখনই অর্ডার করুন
+              {sData.cta_text || "এখনই অর্ডার করুন"}
             </a>
           </div>
+        );
+      }
 
-          {/* DYNAMIC REVIEWS */}
-          <section className="s-sec">
+      // 10. REVIEWS
+      case "reviews": {
+        const revTitle = sData.title || "সম্মানিত গ্রাহকদের মতামত";
+        return (
+          <section key="reviews" className="s-sec">
             <div className="s-head center">
               <span className="s-ico oil a-pulse">
                 <svg viewBox="0 0 24 24">
                   <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.9z" />
                 </svg>
               </span>
-              <h2>সম্মানিত গ্রাহকদের মতামত</h2>
+              <h2>{revTitle}</h2>
             </div>
             <div className="s-rev-row">
               <button
@@ -836,7 +952,9 @@ export default function ShifaLandingPage() {
                         <svg className="s-quote" viewBox="0 0 24 24">
                           <path d="M4 18v-5.5C4 8.4 6.2 6 10 5.5V8c-2 .5-3 1.8-3 4h3v6zm10 0v-5.5c0-4.1 2.2-6.5 6-7V8c-2 .5-3 1.8-3 4h3v6z" />
                         </svg>
-                        <div className="s-stars">★★★★★</div>
+                        <div className="s-stars">
+                          {"★".repeat(rev.rating || 5)}
+                        </div>
                         <p>{rev.text || rev.review}</p>
                         <div className="s-who">
                           <img
@@ -877,10 +995,15 @@ export default function ShifaLandingPage() {
               ))}
             </div>
           </section>
+        );
+      }
 
-          {/* TIMER */}
-          <div className="s-timer">
-            <h3>{content.timer_heading}</h3>
+      // 11. TIMER
+      case "timer": {
+        const timerTitle = sData.title || content.timer_heading;
+        return (
+          <div key="timer" className="s-timer">
+            <h3>{timerTitle}</h3>
             <div className="s-tboxes">
               <div className="s-tbox">
                 <b className="t-d">{toBengaliDigits(timeLeft.d)}</b>
@@ -900,293 +1023,363 @@ export default function ShifaLandingPage() {
               </div>
             </div>
           </div>
-        </div>
+        );
+      }
 
-        {/* ---------- FINAL CTA SECTION ---------- */}
-        <section className="s-final">
-          <h2>{content.final_cta_heading}</h2>
-          <a className="s-btn s-order" href="#checkout" onClick={scrollToCheckout}>
-            <svg fill="none" viewBox="0 0 24 24">
-              <path
-                d="M3 4h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1L21 8H6.3"
-                stroke="#fff"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2.6"
-              />
-              <circle cx="9.5" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
-              <circle cx="17" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
-            </svg>
-            এখনই অর্ডার করুন
-          </a>
-          <div>
-            <a
-              className="s-call"
-              href={`tel:${activeHotline}`}
-              onClick={() => trackContact("phone", activeHotline)}
-            >
-              <svg viewBox="0 0 24 24">
-                <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
+      // 12. FINAL CTA
+      case "final_cta": {
+        const finalTitle = sData.title || content.final_cta_heading;
+        const hotlineNum = sData.phone || activeHotline;
+        const hotlinePrefix = sData.phone_label || "Hotline: ";
+        return (
+          <section key="final_cta" className="s-final">
+            <h2>{finalTitle}</h2>
+            <a className="s-btn s-order" href={sData.cta_url || "#checkout"} onClick={scrollToCheckout}>
+              <svg fill="none" viewBox="0 0 24 24">
+                <path
+                  d="M3 4h2.2l2.3 10.2a1.5 1.5 0 0 0 1.5 1.2h8.4a1.5 1.5 0 0 0 1.5-1.1L21 8H6.3"
+                  stroke="#fff"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2.6"
+                />
+                <circle cx="9.5" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
+                <circle cx="17" cy="19.5" r="1.6" stroke="#fff" strokeWidth="2.4" />
               </svg>
-              Hotline: {activeHotline}
+              {sData.cta_text || "এখনই অর্ডার করুন"}
             </a>
-          </div>
-        </section>
-      </div>
-
-      {/* ========================================================= */}
-      {/* 2. EXACT CHECKOUT ORDER FORM SECTION (#checkout)          */}
-      {/* ========================================================= */}
-      <section className="s-checkout-section" id="checkout">
-        <div className="s-checkout-card" id="order-form">
-          {/* Green Card Header with Cart Icon */}
-          <div className="s-checkout-header">
-            <div className="s-checkout-cart-icon">
-              <svg viewBox="0 0 576 512" xmlns="http://www.w3.org/2000/svg">
-                <path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z" />
-              </svg>
+            <div>
+              <a
+                className="s-call"
+                href={`tel:${hotlineNum}`}
+                onClick={() => trackContact("phone", hotlineNum)}
+              >
+                <svg viewBox="0 0 24 24">
+                  <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z" />
+                </svg>
+                {hotlinePrefix}{hotlineNum}
+              </a>
             </div>
-            <h2>অর্ডার ফর্ম (ক্যাশ অন ডেলিভারি)</h2>
-            <p>আপনার অর্ডারটি প্লেস করতে নিচের প্রয়োজনীয় তথ্যগুলো পূরণ করুন।</p>
-          </div>
+          </section>
+        );
+      }
 
-          {/* White Card Body */}
-          <div className="s-checkout-body">
-            <form onSubmit={handleOrderSubmit}>
-              {/* Product Option - Single Bottle */}
-              <div className="s-cf-group">
-                <h3 className="s-cf-heading">আপনার পণ্য</h3>
-                <div className="s-cf-product">
-                  <input
-                    type="radio"
-                    checked
-                    readOnly
-                    className="s-cf-radio"
-                  />
-                  <img
-                    src={productMainImg}
-                    alt={content.product_name}
-                    className="s-cf-prod-img"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = "/images/product-bottle-main.png";
-                    }}
-                  />
-                  <div className="s-cf-prod-info">
-                    <span className="s-cf-prod-title">
-                      {productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল (১ বোতল)"}
-                    </span>
-                    <div className="s-cf-qty">
-                      <button
-                        type="button"
-                        className="s-cf-qty-btn"
-                        onClick={() => {
-                          const nextQ = Math.max(1, quantity - 1);
-                          setQuantity(nextQ);
-                          trackAddToCart({
-                            item_id: productData?.id || "shifa-001",
-                            item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
-                            price: baseUnitPrice,
-                            quantity: nextQ,
-                          });
-                        }}
-                      >
-                        −
-                      </button>
+      // 13. CHECKOUT FORM
+      case "checkout": {
+        const checkoutHeaderTitle = sData.header_title || "অর্ডার ফর্ম (ক্যাশ অন ডেলিভারি)";
+        const checkoutHeaderSub = sData.header_subtitle || "আপনার অর্ডারটি প্লেস করতে নিচের প্রয়োজনীয় তথ্যগুলো পূরণ করুন।";
+        const shippingBadge = sData.shipping_badge || "সারাদেশে ক্যাশ অন ডেলিভারি";
+        const submitBtnText = sData.submit_btn_text || "অর্ডার কনফার্ম করুন";
+
+        return (
+          <section key="checkout" className="s-checkout-section" id="checkout">
+            <div className="s-checkout-card" id="order-form">
+              {/* Green Card Header with Cart Icon */}
+              <div className="s-checkout-header">
+                <div className="s-checkout-cart-icon">
+                  <svg viewBox="0 0 576 512" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M528.12 301.319l47.273-208C578.806 78.301 567.391 64 551.99 64H159.208l-9.166-44.81C147.758 8.021 137.93 0 126.529 0H24C10.745 0 0 10.745 0 24v16c0 13.255 10.745 24 24 24h69.883l70.248 343.435C147.325 417.1 136 435.222 136 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-15.674-6.447-29.835-16.824-40h209.647C430.447 426.165 424 440.326 424 456c0 30.928 25.072 56 56 56s56-25.072 56-56c0-22.172-12.888-41.332-31.579-50.405l5.517-24.276c3.413-15.018-8.002-29.319-23.403-29.319H218.117l-6.545-32h293.145c11.206 0 20.92-7.754 23.403-18.681z" />
+                  </svg>
+                </div>
+                <h2>{checkoutHeaderTitle}</h2>
+                <p>{checkoutHeaderSub}</p>
+              </div>
+
+              {/* White Card Body */}
+              <div className="s-checkout-body">
+                <form onSubmit={handleOrderSubmit}>
+                  {/* Product Option - Single Bottle */}
+                  <div className="s-cf-group">
+                    <h3 className="s-cf-heading">আপনার পণ্য</h3>
+                    <div className="s-cf-product">
                       <input
-                        type="text"
+                        type="radio"
+                        checked
                         readOnly
-                        value={toBengaliDigits(quantity)}
-                        className="s-cf-qty-val"
+                        className="s-cf-radio"
                       />
-                      <button
-                        type="button"
-                        className="s-cf-qty-btn"
-                        onClick={() => {
-                          const nextQ = quantity + 1;
-                          setQuantity(nextQ);
-                          trackAddToCart({
-                            item_id: productData?.id || "shifa-001",
-                            item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
-                            price: baseUnitPrice,
-                            quantity: nextQ,
-                          });
+                      <img
+                        src={productMainImg}
+                        alt={content.product_name}
+                        className="s-cf-prod-img"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/images/product-bottle-main.png";
                         }}
-                      >
-                        +
-                      </button>
-                    </div>
-                    <div className="s-cf-prod-price flex flex-col items-end justify-center">
-                      {baseOriginalPrice > baseUnitPrice && (
-                        <span className="text-[11px] sm:text-xs text-stone-400 line-through font-normal">
-                          ৳ {toBengaliDigits(baseOriginalPrice * quantity)}
+                      />
+                      <div className="s-cf-prod-info">
+                        <span className="s-cf-prod-title">
+                          {productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল (১ বোতল)"}
                         </span>
-                      )}
-                      <span className="text-base sm:text-lg font-black text-emerald-800">
-                        ৳ {toBengaliDigits(subtotal)}
+                        <div className="s-cf-qty">
+                          <button
+                            type="button"
+                            className="s-cf-qty-btn"
+                            onClick={() => {
+                              const nextQ = Math.max(1, quantity - 1);
+                              setQuantity(nextQ);
+                              trackAddToCart({
+                                item_id: productData?.id || "shifa-001",
+                                item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
+                                price: baseUnitPrice,
+                                quantity: nextQ,
+                              });
+                            }}
+                          >
+                            −
+                          </button>
+                          <input
+                            type="text"
+                            readOnly
+                            value={toBengaliDigits(quantity)}
+                            className="s-cf-qty-val"
+                          />
+                          <button
+                            type="button"
+                            className="s-cf-qty-btn"
+                            onClick={() => {
+                              const nextQ = quantity + 1;
+                              setQuantity(nextQ);
+                              trackAddToCart({
+                                item_id: productData?.id || "shifa-001",
+                                item_name: productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল",
+                                price: baseUnitPrice,
+                                quantity: nextQ,
+                              });
+                            }}
+                          >
+                            +
+                          </button>
+                        </div>
+                        <div className="s-cf-prod-price flex flex-col items-end justify-center">
+                          {baseOriginalPrice > baseUnitPrice && (
+                            <span className="text-[11px] sm:text-xs text-stone-400 line-through font-normal">
+                              ৳ {toBengaliDigits(baseOriginalPrice * quantity)}
+                            </span>
+                          )}
+                          <span className="text-base sm:text-lg font-black text-emerald-800">
+                            ৳ {toBengaliDigits(subtotal)}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Customer Info */}
+                  <div className="s-cf-group">
+                    <h3 className="s-cf-heading">আপনার তথ্য দিন</h3>
+
+                    <div className="s-cf-field">
+                      <label className="s-cf-label">
+                        আপনার সম্পূর্ণ নাম লিখুন <span className="req">*</span>
+                      </label>
+                      <input
+                        ref={nameInputRef}
+                        type="text"
+                        value={formData.name}
+                        onFocus={triggerBeginCheckout}
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value });
+                          if (errors.name) setErrors({ ...errors, name: "" });
+                          if (submitError) setSubmitError("");
+                        }}
+                        placeholder="যেমন: মোঃ সাকিব হোসেন"
+                        className="s-cf-input"
+                        style={{ borderColor: errors.name ? "#dc2626" : undefined }}
+                      />
+                      {errors.name && <p className="s-cf-error">{errors.name}</p>}
+                    </div>
+
+                    <div className="s-cf-field">
+                      <label className="s-cf-label">
+                        ১১ ডিজিটের মোবাইল নাম্বার লিখুন <span className="req">*</span>
+                      </label>
+                      <input
+                        ref={phoneInputRef}
+                        type="tel"
+                        value={formData.phone}
+                        onFocus={triggerBeginCheckout}
+                        onChange={(e) => {
+                          setFormData({ ...formData, phone: e.target.value });
+                          if (errors.phone) setErrors({ ...errors, phone: "" });
+                          if (submitError) setSubmitError("");
+                        }}
+                        placeholder="যেমন: 017XXXXXXXX"
+                        className="s-cf-input"
+                        style={{ borderColor: errors.phone ? "#dc2626" : undefined }}
+                      />
+                      {errors.phone && <p className="s-cf-error">{errors.phone}</p>}
+                    </div>
+
+                    <div className="s-cf-field">
+                      <label className="s-cf-label">
+                        সম্পূর্ণ ঠিকানা (গ্রাম বা এলাকা, থানা ও জেলা) <span className="req">*</span>
+                      </label>
+                      <input
+                        ref={addressInputRef}
+                        type="text"
+                        value={formData.address}
+                        onFocus={triggerBeginCheckout}
+                        onChange={(e) => {
+                          setFormData({ ...formData, address: e.target.value });
+                          if (errors.address) setErrors({ ...errors, address: "" });
+                          if (submitError) setSubmitError("");
+                        }}
+                        placeholder="যেমন: বাড়ি ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা"
+                        className="s-cf-input"
+                        style={{ borderColor: errors.address ? "#dc2626" : undefined }}
+                      />
+                      {errors.address && <p className="s-cf-error">{errors.address}</p>}
+                    </div>
+                  </div>
+
+                  {/* Delivery Method */}
+                  <div className="s-cf-group">
+                    <h3 className="s-cf-heading">ডেলিভারি মেথড</h3>
+                    <div className="s-cf-shipping-row">
+                      <input
+                        type="radio"
+                        checked
+                        readOnly
+                        className="s-cf-radio"
+                      />
+                      <span style={{ fontWeight: 600, color: "#0E5A2E" }}>
+                        {shippingBadge}
                       </span>
                     </div>
                   </div>
-                </div>
+
+                  {/* Order Review Table */}
+                  <div className="s-cf-group">
+                    <h3 className="s-cf-heading">আপনার অর্ডার বিবরণী</h3>
+                    <table className="s-cf-table">
+                      <thead>
+                        <tr>
+                          <th>পণ্য বিবরণ</th>
+                          <th style={{ textAlign: "right" }}>মূল্য</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>
+                            {productData?.name_primary || content.product_name} × {toBengaliDigits(quantity)}
+                          </td>
+                          <td className="val">
+                            ৳ {toBengaliDigits(subtotal)}
+                          </td>
+                        </tr>
+                      </tbody>
+                      <tfoot>
+                        <tr>
+                          <th>সাবটোটাল</th>
+                          <td className="val">
+                            ৳ {toBengaliDigits(subtotal)}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th>ডেলিভারি চার্জ</th>
+                          <td className="val" style={{ color: "#0E5A2E", fontWeight: 700 }}>
+                            ৳ {toBengaliDigits(deliveryCharge)}
+                          </td>
+                        </tr>
+                        <tr className="total">
+                          <th>মোট প্রদেয় বিল</th>
+                          <td className="val">
+                            ৳ {toBengaliDigits(grandTotal)}
+                          </td>
+                        </tr>
+                      </tfoot>
+                    </table>
+                  </div>
+
+                  {/* Submit Error Alert */}
+                  {submitError && (
+                    <div className="s-cf-alert-banner">
+                      <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <span>{submitError}</span>
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="s-cf-submit-btn"
+                  >
+                    {isSubmitting ? (
+                      <span>অর্ডার প্রসেস হচ্ছে...</span>
+                    ) : (
+                      <span>
+                        {submitBtnText} - ৳ {toBengaliDigits(grandTotal)}
+                      </span>
+                    )}
+                  </button>
+                </form>
               </div>
+            </div>
+          </section>
+        );
+      }
 
-              {/* Customer Info */}
-              <div className="s-cf-group">
-                <h3 className="s-cf-heading">আপনার তথ্য দিন</h3>
+      default:
+        return null;
+    }
+  };
 
-                <div className="s-cf-field">
-                  <label className="s-cf-label">
-                    আপনার সম্পূর্ণ নাম লিখুন <span className="req">*</span>
-                  </label>
-                  <input
-                    ref={nameInputRef}
-                    type="text"
-                    value={formData.name}
-                    onFocus={triggerBeginCheckout}
-                    onChange={(e) => {
-                      setFormData({ ...formData, name: e.target.value });
-                      if (errors.name) setErrors({ ...errors, name: "" });
-                      if (submitError) setSubmitError("");
-                    }}
-                    placeholder="যেমন: মোঃ সাকিব হোসেন"
-                    className="s-cf-input"
-                    style={{ borderColor: errors.name ? "#dc2626" : undefined }}
-                  />
-                  {errors.name && <p className="s-cf-error">{errors.name}</p>}
-                </div>
+  // Group sections by their native layout positions
+  const topKeys = ["hero", "gallery", "offer_banner"];
+  const wrapKeys = ["badges", "intro", "ingredients", "usage", "certification", "mid_cta", "reviews", "timer"];
 
-                <div className="s-cf-field">
-                  <label className="s-cf-label">
-                    ১১ ডিজিটের মোবাইল নাম্বার লিখুন <span className="req">*</span>
-                  </label>
-                  <input
-                    ref={phoneInputRef}
-                    type="tel"
-                    value={formData.phone}
-                    onFocus={triggerBeginCheckout}
-                    onChange={(e) => {
-                      setFormData({ ...formData, phone: e.target.value });
-                      if (errors.phone) setErrors({ ...errors, phone: "" });
-                      if (submitError) setSubmitError("");
-                    }}
-                    placeholder="যেমন: 017XXXXXXXX"
-                    className="s-cf-input"
-                    style={{ borderColor: errors.phone ? "#dc2626" : undefined }}
-                  />
-                  {errors.phone && <p className="s-cf-error">{errors.phone}</p>}
-                </div>
-
-                <div className="s-cf-field">
-                  <label className="s-cf-label">
-                    সম্পূর্ণ ঠিকানা (গ্রাম বা এলাকা, থানা ও জেলা) <span className="req">*</span>
-                  </label>
-                  <input
-                    ref={addressInputRef}
-                    type="text"
-                    value={formData.address}
-                    onFocus={triggerBeginCheckout}
-                    onChange={(e) => {
-                      setFormData({ ...formData, address: e.target.value });
-                      if (errors.address) setErrors({ ...errors, address: "" });
-                      if (submitError) setSubmitError("");
-                    }}
-                    placeholder="যেমন: বাড়ি ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা"
-                    className="s-cf-input"
-                    style={{ borderColor: errors.address ? "#dc2626" : undefined }}
-                  />
-                  {errors.address && <p className="s-cf-error">{errors.address}</p>}
-                </div>
-              </div>
-
-              {/* Delivery Method */}
-              <div className="s-cf-group">
-                <h3 className="s-cf-heading">ডেলিভারি মেথড</h3>
-                <div className="s-cf-shipping-row">
-                  <input
-                    type="radio"
-                    checked
-                    readOnly
-                    className="s-cf-radio"
-                  />
-                  <span style={{ fontWeight: 600, color: "#0E5A2E" }}>
-                    সারাদেশে ক্যাশ অন ডেলিভারি
-                  </span>
-                </div>
-              </div>
-
-              {/* Order Review Table */}
-              <div className="s-cf-group">
-                <h3 className="s-cf-heading">আপনার অর্ডার বিবরণী</h3>
-                <table className="s-cf-table">
-                  <thead>
-                    <tr>
-                      <th>পণ্য বিবরণ</th>
-                      <th style={{ textAlign: "right" }}>মূল্য</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>
-                        {productData?.name_primary || content.product_name} × {toBengaliDigits(quantity)}
-                      </td>
-                      <td className="val">
-                        ৳ {toBengaliDigits(subtotal)}
-                      </td>
-                    </tr>
-                  </tbody>
-                  <tfoot>
-                    <tr>
-                      <th>সাবটোটাল</th>
-                      <td className="val">
-                        ৳ {toBengaliDigits(subtotal)}
-                      </td>
-                    </tr>
-                    <tr>
-                      <th>ডেলিভারি চার্জ</th>
-                      <td className="val" style={{ color: "#0E5A2E", fontWeight: 700 }}>
-                        ৳ {toBengaliDigits(deliveryCharge)}
-                      </td>
-                    </tr>
-                    <tr className="total">
-                      <th>মোট প্রদেয় বিল</th>
-                      <td className="val">
-                        ৳ {toBengaliDigits(grandTotal)}
-                      </td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-
-              {/* Submit Error Alert */}
-              {submitError && (
-                <div className="s-cf-alert-banner">
-                  <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                  <span>{submitError}</span>
-                </div>
-              )}
-
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="s-cf-submit-btn"
-              >
-                {isSubmitting ? (
-                  <span>অর্ডার প্রসেস হচ্ছে...</span>
-                ) : (
-                  <span>
-                    অর্ডার কনফার্ম করুন - ৳ {toBengaliDigits(grandTotal)}
-                  </span>
-                )}
-              </button>
-            </form>
+  return (
+    <div className="w-full bg-white text-[#1E2B22]">
+      {/* ========================================================= */}
+      {/* ADMIN DRAFT PREVIEW BANNER (IF ?preview=true)             */}
+      {/* ========================================================= */}
+      {isPreview && (
+        <div className="bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white text-xs font-semibold py-2.5 px-4 sticky top-0 z-50 flex items-center justify-between shadow-lg">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+            <span>🛠️ অ্যাডমিন ড্রাফট প্রিভিউ মোড — এই পরিবর্তনগুলো এখনো লাইভ পাবলিশ করা হয়নি।</span>
           </div>
+          <a
+            href="/"
+            className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-white text-xs font-bold transition flex items-center gap-1"
+          >
+            <span>লাইভ মোড</span>
+            <span>✕</span>
+          </a>
         </div>
-      </section>
+      )}
+
+      {/* Render Announcement Bar if in order */}
+      {sectionsOrder.includes("announcement") && renderSection("announcement")}
+
+      {/* Main Container */}
+      <div id="shifa-lp">
+        {/* Render Top Section (Hero, Gallery, Offer Strip) */}
+        <div className="s-top">
+          {sectionsOrder
+            .filter((k) => topKeys.includes(k))
+            .map((k) => renderSection(k))}
+        </div>
+
+        {/* Render Wrap Sections (Badges, Intro, Ingredients, Usage, Cert, Mid CTA, Reviews, Timer) */}
+        <div className="s-wrap">
+          {sectionsOrder
+            .filter((k) => wrapKeys.includes(k))
+            .map((k) => renderSection(k))}
+        </div>
+
+        {/* Render Final CTA */}
+        {sectionsOrder.includes("final_cta") && renderSection("final_cta")}
+      </div>
+
+      {/* Render Checkout Section */}
+      {sectionsOrder.includes("checkout") && renderSection("checkout")}
 
       {/* ========================================================= */}
-      {/* 3. ORDER CONFIRMATION MODAL                               */}
+      {/* ORDER CONFIRMATION MODAL                                  */}
       {/* ========================================================= */}
       {orderSuccess && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -1238,8 +1431,6 @@ export default function ShifaLandingPage() {
           </div>
         </div>
       )}
-
-
     </div>
   );
 }
