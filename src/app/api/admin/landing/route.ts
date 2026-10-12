@@ -186,8 +186,28 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: saveError.message }, { status: 500 });
     }
 
-    // If published, create revision snapshot
+    // If published, create revision snapshot and sync product price if changed
     if (action === "publish") {
+      const checkoutCfg = targetSectionsData?.checkout;
+      if (checkoutCfg) {
+        const prodUpdate: any = {};
+        if (checkoutCfg.price_current !== undefined && Number(checkoutCfg.price_current) > 0) {
+          prodUpdate.price = Number(checkoutCfg.price_current);
+        }
+        if (checkoutCfg.price_regular !== undefined && Number(checkoutCfg.price_regular) > 0) {
+          prodUpdate.original_price = Number(checkoutCfg.price_regular);
+        }
+        if (checkoutCfg.product_name) {
+          prodUpdate.name_primary = checkoutCfg.product_name;
+        }
+        if (Object.keys(prodUpdate).length > 0) {
+          await supabaseAdmin
+            .from("app_products")
+            .update(prodUpdate)
+            .eq("is_active", true);
+        }
+      }
+
       await supabaseAdmin.from("app_landing_page_revisions").insert({
         landing_page_id: existing.id,
         revision_name: `পাবলিশড - ${new Date().toLocaleDateString("bn-BD")} ${new Date().toLocaleTimeString("bn-BD")}`,

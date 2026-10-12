@@ -1269,45 +1269,312 @@ export default function LandingCmsEditor() {
 
                       {/* 14. CHECKOUT */}
                       {key === "checkout" && (
-                        <div className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">ফর্ম হেডার শিরোনাম</label>
-                              <input
-                                type="text"
-                                value={sData.header_title || "অর্ডার ফর্ম (ক্যাশ অন ডেলিভারি)"}
-                                onChange={(e) => updateSectionField("checkout", "header_title", e.target.value)}
-                                className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">ফর্ম সাব-শিরোনাম</label>
-                              <input
-                                type="text"
-                                value={sData.header_subtitle || "আপনার অর্ডারটি প্লেস করতে নিচের প্রয়োজনীয় তথ্যগুলো পূরণ করুন।"}
-                                onChange={(e) => updateSectionField("checkout", "header_subtitle", e.target.value)}
-                                className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-xs"
-                              />
+                        <div className="space-y-6">
+                          {/* Group 1: Form Header */}
+                          <div className="p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
+                            <h5 className="text-xs font-bold text-gray-800 border-b border-gray-100 pb-2">
+                              ১. ফর্ম হেডার ও পরিচিতি (Form Header)
+                            </h5>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">ফর্ম হেডার শিরোনাম</label>
+                                <input
+                                  type="text"
+                                  value={sData.header_title ?? "অর্ডার ফর্ম (ক্যাশ অন ডেলিভারি)"}
+                                  onChange={(e) => updateSectionField("checkout", "header_title", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold focus:ring-2 focus:ring-[#ff3f60] outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">ফর্ম সাব-শিরোনাম</label>
+                                <input
+                                  type="text"
+                                  value={sData.header_subtitle ?? "আপনার অর্ডারটি প্লেস করতে নিচের প্রয়োজনীয় তথ্যগুলো পূরণ করুন।"}
+                                  onChange={(e) => updateSectionField("checkout", "header_subtitle", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs focus:ring-2 focus:ring-[#ff3f60] outline-none"
+                                />
+                              </div>
                             </div>
                           </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+                          {/* Group 2: Product & Pricing */}
+                          <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-200/70 space-y-4">
+                            <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2">
+                              <h5 className="text-xs font-bold text-emerald-900">
+                                ২. পণ্য ও মূল্য নির্ধারণ (Product & Price Configuration)
+                              </h5>
+                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                                লাইভ মূল্য হিসাব
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">পণ্য সেকশন শিরোনাম</label>
+                                <input
+                                  type="text"
+                                  value={sData.product_section_title ?? "আপনার পণ্য"}
+                                  onChange={(e) => updateSectionField("checkout", "product_section_title", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">পণ্যের নাম ও প্যাকেজ টেক্সট</label>
+                                <input
+                                  type="text"
+                                  value={sData.product_name ?? "শিফা পেইন কেয়ার অয়েল (১ বোতল)"}
+                                  onChange={(e) => updateSectionField("checkout", "product_name", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-bold text-emerald-800 mb-1">বর্তমান বিক্রয় মূল্য (৳)</label>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={sData.price_current ?? 950}
+                                  onChange={(e) => updateSectionField("checkout", "price_current", Number(e.target.value))}
+                                  className="w-full px-3 py-2 rounded-xl border-2 border-emerald-500 bg-white text-xs font-black text-emerald-900 focus:ring-2 focus:ring-emerald-600 outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">পূর্বের / রেগুলার মূল্য (৳)</label>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={sData.price_regular ?? 1450}
+                                  onChange={(e) => updateSectionField("checkout", "price_regular", Number(e.target.value))}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-600"
+                                />
+                              </div>
+                            </div>
+
+                            <ImageUploadField
+                              label="চেকআউট ফর্মে প্রদর্শিত পণ্যের ছবি"
+                              value={sData.product_image || "/images/product-bottle-main.png"}
+                              onChange={(url) => updateSectionField("checkout", "product_image", url)}
+                              sectionKey="checkout"
+                            />
+                          </div>
+
+                          {/* Group 3: Customer Info Fields */}
+                          <div className="p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
+                            <h5 className="text-xs font-bold text-gray-800 border-b border-gray-100 pb-2">
+                              ৩. গ্রাহকের তথ্য ইনপুট ফিল্ডস (Customer Info Labels & Placeholders)
+                            </h5>
                             <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">ডেলিভারি মেথড ব্যাজ টেক্সট</label>
+                              <label className="block text-[11px] font-semibold text-gray-700 mb-1">সেকশন হেডিং</label>
                               <input
                                 type="text"
-                                value={sData.shipping_badge || "সারাদেশে ক্যাশ অন ডেলিভারি"}
-                                onChange={(e) => updateSectionField("checkout", "shipping_badge", e.target.value)}
-                                className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-emerald-800"
+                                value={sData.customer_section_title ?? "আপনার তথ্য দিন"}
+                                onChange={(e) => updateSectionField("checkout", "customer_section_title", e.target.value)}
+                                className="w-full sm:w-1/2 px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold"
                               />
                             </div>
-                            <div>
-                              <label className="block text-xs font-semibold text-gray-700 mb-1">সাবমিট বাটন টেক্সট</label>
-                              <input
-                                type="text"
-                                value={sData.submit_btn_text || "অর্ডার কনফার্ম করুন"}
-                                onChange={(e) => updateSectionField("checkout", "submit_btn_text", e.target.value)}
-                                className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold"
-                              />
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">নামের ফিল্ড লেবেল</label>
+                                <input
+                                  type="text"
+                                  value={sData.name_label ?? "আপনার সম্পূর্ণ নাম লিখুন"}
+                                  onChange={(e) => updateSectionField("checkout", "name_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">নামের প্লেসহোল্ডার</label>
+                                <input
+                                  type="text"
+                                  value={sData.name_placeholder ?? "যেমন: মোঃ সাকিব হোসেন"}
+                                  onChange={(e) => updateSectionField("checkout", "name_placeholder", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">মোবাইল নাম্বার লেবেল</label>
+                                <input
+                                  type="text"
+                                  value={sData.phone_label ?? "১১ ডিজিটের মোবাইল নাম্বার লিখুন"}
+                                  onChange={(e) => updateSectionField("checkout", "phone_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">মোবাইল নাম্বার প্লেসহোল্ডার</label>
+                                <input
+                                  type="text"
+                                  value={sData.phone_placeholder ?? "যেমন: 017XXXXXXXX"}
+                                  onChange={(e) => updateSectionField("checkout", "phone_placeholder", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">ঠিকানার লেবেল</label>
+                                <input
+                                  type="text"
+                                  value={sData.address_label ?? "সম্পূর্ণ ঠিকানা (গ্রাম বা এলাকা, থানা ও জেলা)"}
+                                  onChange={(e) => updateSectionField("checkout", "address_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">ঠিকানার প্লেসহোল্ডার</label>
+                                <input
+                                  type="text"
+                                  value={sData.address_placeholder ?? "যেমন: বাড়ি ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা"}
+                                  onChange={(e) => updateSectionField("checkout", "address_placeholder", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Group 4: Delivery Method & Charge */}
+                          <div className="p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
+                            <h5 className="text-xs font-bold text-gray-800 border-b border-gray-100 pb-2">
+                              ৪. ডেলিভারি মেথড ও চার্জ (Delivery Method & Charge)
+                            </h5>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">ডেলিভারি সেকশন শিরোনাম</label>
+                                <input
+                                  type="text"
+                                  value={sData.delivery_section_title ?? "ডেলিভারি মেথড"}
+                                  onChange={(e) => updateSectionField("checkout", "delivery_section_title", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">ডেলিভারি মেথড ব্যাজ টেক্সট</label>
+                                <input
+                                  type="text"
+                                  value={sData.shipping_badge ?? "সারাদেশে ক্যাশ অন ডেলিভারি"}
+                                  onChange={(e) => updateSectionField("checkout", "shipping_badge", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-emerald-800"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">ডেলিভারি চার্জ (৳) (০ = ফ্রি)</label>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={sData.delivery_charge ?? 0}
+                                  onChange={(e) => updateSectionField("checkout", "delivery_charge", Number(e.target.value))}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-emerald-800"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Group 5: Order Review Summary Table */}
+                          <div className="p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
+                            <h5 className="text-xs font-bold text-gray-800 border-b border-gray-100 pb-2">
+                              ৫. অর্ডার বিবরণী টেবিল টেক্সট (Order Summary Table Labels)
+                            </h5>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">টেবিল হেডিং</label>
+                                <input
+                                  type="text"
+                                  value={sData.review_table_title ?? "আপনার অর্ডার বিবরণী"}
+                                  onChange={(e) => updateSectionField("checkout", "review_table_title", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">কলাম ১ লেবেল (বাম)</label>
+                                <input
+                                  type="text"
+                                  value={sData.col_product_label ?? "পণ্য বিবরণ"}
+                                  onChange={(e) => updateSectionField("checkout", "col_product_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">কলাম ২ লেবেল (ডান)</label>
+                                <input
+                                  type="text"
+                                  value={sData.col_price_label ?? "মূল্য"}
+                                  onChange={(e) => updateSectionField("checkout", "col_price_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">সাবটোটাল রো লেবেল</label>
+                                <input
+                                  type="text"
+                                  value={sData.subtotal_label ?? "সাবটোটাল"}
+                                  onChange={(e) => updateSectionField("checkout", "subtotal_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">ডেলিভারি চার্জ রো লেবেল</label>
+                                <input
+                                  type="text"
+                                  value={sData.delivery_charge_label ?? "ডেলিভারি চার্জ"}
+                                  onChange={(e) => updateSectionField("checkout", "delivery_charge_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">মোট প্রদেয় বিল রো লেবেল</label>
+                                <input
+                                  type="text"
+                                  value={sData.total_label ?? "মোট প্রদেয় বিল"}
+                                  onChange={(e) => updateSectionField("checkout", "total_label", e.target.value)}
+                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-emerald-800"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Group 6: Submit Button & Confirmation Modal */}
+                          <div className="p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
+                            <h5 className="text-xs font-bold text-gray-800 border-b border-gray-100 pb-2">
+                              ৬. সাবমিট বাটন ও কনফার্মেশন পপ-আপ (Submit Button & Modal)
+                            </h5>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">সাবমিট বাটন টেক্সট</label>
+                                <input
+                                  type="text"
+                                  value={sData.submit_btn_text ?? "অর্ডার কনফার্ম করুন"}
+                                  onChange={(e) => updateSectionField("checkout", "submit_btn_text", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">প্রসেসিং টেক্সট</label>
+                                <input
+                                  type="text"
+                                  value={sData.submitting_btn_text ?? "অর্ডার প্রসেস হচ্ছে..."}
+                                  onChange={(e) => updateSectionField("checkout", "submitting_btn_text", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">অর্ডার সাকসেস টাইটেল</label>
+                                <input
+                                  type="text"
+                                  value={sData.success_title ?? "আলহামদুলিল্লাহ! আপনার অর্ডার সফল হয়েছে"}
+                                  onChange={(e) => updateSectionField("checkout", "success_title", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-[11px] font-semibold text-gray-700 mb-1">সাকসেস ক্লোজ বাটন</label>
+                                <input
+                                  type="text"
+                                  value={sData.success_btn_text ?? "ঠিক আছে"}
+                                  onChange={(e) => updateSectionField("checkout", "success_btn_text", e.target.value)}
+                                  className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>

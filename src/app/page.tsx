@@ -395,26 +395,35 @@ export default function ShifaLandingPage() {
     return () => clearInterval(interval);
   }, [timerHours]);
 
-  // ---- Order Form & Pricing (Single bottle package, 100% Free Delivery) ----
+  // ---- Order Form & Pricing ----
   const [quantity, setQuantity] = useState(1);
 
+  const checkoutConfig = sectionsData?.checkout || {};
+
   const baseUnitPrice =
-    productData && Number(productData.price) > 0
+    checkoutConfig.price_current !== undefined && Number(checkoutConfig.price_current) > 0
+      ? Number(checkoutConfig.price_current)
+      : productData && Number(productData.price) > 0
       ? Number(productData.price)
       : Number(content.price_current) > 0
       ? Number(content.price_current)
       : 950;
 
   const baseOriginalPrice =
-    productData && Number(productData.original_price) > 0
+    checkoutConfig.price_regular !== undefined && checkoutConfig.price_regular !== "" && Number(checkoutConfig.price_regular) >= 0
+      ? Number(checkoutConfig.price_regular)
+      : productData && Number(productData.original_price) > 0
       ? Number(productData.original_price)
       : Number(content.price_regular) > 0
       ? Number(content.price_regular)
       : 1450;
 
   const subtotal = quantity * baseUnitPrice;
-  const deliveryCharge = 0; // 100% Free delivery nationwide
-  const grandTotal = subtotal;
+  const deliveryCharge =
+    checkoutConfig.delivery_charge !== undefined && checkoutConfig.delivery_charge !== ""
+      ? Math.max(0, Number(checkoutConfig.delivery_charge) || 0)
+      : 0;
+  const grandTotal = subtotal + deliveryCharge;
 
   // Analytics tracking guards
   const hasFiredViewItem = useRef(false);
@@ -527,10 +536,10 @@ export default function ShifaLandingPage() {
           name: formData.name.trim(),
           phone: cleanPhone,
           address: formData.address.trim(),
-          district: "বাংলাদেশ (ফ্রি ডেলিভারি)",
+          district: checkoutConfig.shipping_badge || "বাংলাদেশ (ফ্রি ডেলিভারি)",
           quantity,
           unitPrice: baseUnitPrice,
-          deliveryCharge: 0,
+          deliveryCharge: deliveryCharge,
           variant: "১ বোতল",
           productId: productData?.id || null,
         }),
@@ -1068,8 +1077,26 @@ export default function ShifaLandingPage() {
       case "checkout": {
         const checkoutHeaderTitle = sData.header_title || "অর্ডার ফর্ম (ক্যাশ অন ডেলিভারি)";
         const checkoutHeaderSub = sData.header_subtitle || "আপনার অর্ডারটি প্লেস করতে নিচের প্রয়োজনীয় তথ্যগুলো পূরণ করুন।";
+        const productSecTitle = sData.product_section_title || "আপনার পণ্য";
+        const checkoutProdName = sData.product_name || productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল (১ বোতল)";
+        const checkoutProdImg = sData.product_image || productMainImg;
+        const customerSecTitle = sData.customer_section_title || "আপনার তথ্য দিন";
+        const nameLabel = sData.name_label || "আপনার সম্পূর্ণ নাম লিখুন";
+        const namePlaceholder = sData.name_placeholder || "যেমন: মোঃ সাকিব হোসেন";
+        const phoneLabel = sData.phone_label || "১১ ডিজিটের মোবাইল নাম্বার লিখুন";
+        const phonePlaceholder = sData.phone_placeholder || "যেমন: 017XXXXXXXX";
+        const addressLabel = sData.address_label || "সম্পূর্ণ ঠিকানা (গ্রাম বা এলাকা, থানা ও জেলা)";
+        const addressPlaceholder = sData.address_placeholder || "যেমন: বাড়ি ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা";
+        const deliverySecTitle = sData.delivery_section_title || "ডেলিভারি মেথড";
         const shippingBadge = sData.shipping_badge || "সারাদেশে ক্যাশ অন ডেলিভারি";
+        const reviewTableTitle = sData.review_table_title || "আপনার অর্ডার বিবরণী";
+        const colProductLabel = sData.col_product_label || "পণ্য বিবরণ";
+        const colPriceLabel = sData.col_price_label || "মূল্য";
+        const subtotalLabel = sData.subtotal_label || "সাবটোটাল";
+        const deliveryChargeLabel = sData.delivery_charge_label || "ডেলিভারি চার্জ";
+        const totalLabel = sData.total_label || "মোট প্রদেয় বিল";
         const submitBtnText = sData.submit_btn_text || "অর্ডার কনফার্ম করুন";
+        const submittingBtnText = sData.submitting_btn_text || "অর্ডার প্রসেস হচ্ছে...";
 
         return (
           <section key="checkout" className="s-checkout-section" id="checkout">
@@ -1090,7 +1117,7 @@ export default function ShifaLandingPage() {
                 <form onSubmit={handleOrderSubmit}>
                   {/* Product Option - Single Bottle */}
                   <div className="s-cf-group">
-                    <h3 className="s-cf-heading">আপনার পণ্য</h3>
+                    <h3 className="s-cf-heading">{productSecTitle}</h3>
                     <div className="s-cf-product">
                       <input
                         type="radio"
@@ -1099,8 +1126,8 @@ export default function ShifaLandingPage() {
                         className="s-cf-radio"
                       />
                       <img
-                        src={productMainImg}
-                        alt={content.product_name}
+                        src={checkoutProdImg}
+                        alt={checkoutProdName}
                         className="s-cf-prod-img"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "/images/product-bottle-main.png";
@@ -1108,7 +1135,7 @@ export default function ShifaLandingPage() {
                       />
                       <div className="s-cf-prod-info">
                         <span className="s-cf-prod-title">
-                          {productData?.name_primary || content.product_name || "শিফা পেইন কেয়ার অয়েল (১ বোতল)"}
+                          {checkoutProdName}
                         </span>
                         <div className="s-cf-qty">
                           <button
@@ -1166,11 +1193,11 @@ export default function ShifaLandingPage() {
 
                   {/* Customer Info */}
                   <div className="s-cf-group">
-                    <h3 className="s-cf-heading">আপনার তথ্য দিন</h3>
+                    <h3 className="s-cf-heading">{customerSecTitle}</h3>
 
                     <div className="s-cf-field">
                       <label className="s-cf-label">
-                        আপনার সম্পূর্ণ নাম লিখুন <span className="req">*</span>
+                        {nameLabel} <span className="req">*</span>
                       </label>
                       <input
                         ref={nameInputRef}
@@ -1182,7 +1209,7 @@ export default function ShifaLandingPage() {
                           if (errors.name) setErrors({ ...errors, name: "" });
                           if (submitError) setSubmitError("");
                         }}
-                        placeholder="যেমন: মোঃ সাকিব হোসেন"
+                        placeholder={namePlaceholder}
                         className="s-cf-input"
                         style={{ borderColor: errors.name ? "#dc2626" : undefined }}
                       />
@@ -1191,7 +1218,7 @@ export default function ShifaLandingPage() {
 
                     <div className="s-cf-field">
                       <label className="s-cf-label">
-                        ১১ ডিজিটের মোবাইল নাম্বার লিখুন <span className="req">*</span>
+                        {phoneLabel} <span className="req">*</span>
                       </label>
                       <input
                         ref={phoneInputRef}
@@ -1203,7 +1230,7 @@ export default function ShifaLandingPage() {
                           if (errors.phone) setErrors({ ...errors, phone: "" });
                           if (submitError) setSubmitError("");
                         }}
-                        placeholder="যেমন: 017XXXXXXXX"
+                        placeholder={phonePlaceholder}
                         className="s-cf-input"
                         style={{ borderColor: errors.phone ? "#dc2626" : undefined }}
                       />
@@ -1212,7 +1239,7 @@ export default function ShifaLandingPage() {
 
                     <div className="s-cf-field">
                       <label className="s-cf-label">
-                        সম্পূর্ণ ঠিকানা (গ্রাম বা এলাকা, থানা ও জেলা) <span className="req">*</span>
+                        {addressLabel} <span className="req">*</span>
                       </label>
                       <input
                         ref={addressInputRef}
@@ -1224,7 +1251,7 @@ export default function ShifaLandingPage() {
                           if (errors.address) setErrors({ ...errors, address: "" });
                           if (submitError) setSubmitError("");
                         }}
-                        placeholder="যেমন: বাড়ি ১২, রোড ৪, সেক্টর ৭, উত্তরা, ঢাকা"
+                        placeholder={addressPlaceholder}
                         className="s-cf-input"
                         style={{ borderColor: errors.address ? "#dc2626" : undefined }}
                       />
@@ -1234,7 +1261,7 @@ export default function ShifaLandingPage() {
 
                   {/* Delivery Method */}
                   <div className="s-cf-group">
-                    <h3 className="s-cf-heading">ডেলিভারি মেথড</h3>
+                    <h3 className="s-cf-heading">{deliverySecTitle}</h3>
                     <div className="s-cf-shipping-row">
                       <input
                         type="radio"
@@ -1250,18 +1277,18 @@ export default function ShifaLandingPage() {
 
                   {/* Order Review Table */}
                   <div className="s-cf-group">
-                    <h3 className="s-cf-heading">আপনার অর্ডার বিবরণী</h3>
+                    <h3 className="s-cf-heading">{reviewTableTitle}</h3>
                     <table className="s-cf-table">
                       <thead>
                         <tr>
-                          <th>পণ্য বিবরণ</th>
-                          <th style={{ textAlign: "right" }}>মূল্য</th>
+                          <th>{colProductLabel}</th>
+                          <th style={{ textAlign: "right" }}>{colPriceLabel}</th>
                         </tr>
                       </thead>
                       <tbody>
                         <tr>
                           <td>
-                            {productData?.name_primary || content.product_name} × {toBengaliDigits(quantity)}
+                            {checkoutProdName} × {toBengaliDigits(quantity)}
                           </td>
                           <td className="val">
                             ৳ {toBengaliDigits(subtotal)}
@@ -1270,19 +1297,19 @@ export default function ShifaLandingPage() {
                       </tbody>
                       <tfoot>
                         <tr>
-                          <th>সাবটোটাল</th>
+                          <th>{subtotalLabel}</th>
                           <td className="val">
                             ৳ {toBengaliDigits(subtotal)}
                           </td>
                         </tr>
                         <tr>
-                          <th>ডেলিভারি চার্জ</th>
+                          <th>{deliveryChargeLabel}</th>
                           <td className="val" style={{ color: "#0E5A2E", fontWeight: 700 }}>
-                            ৳ {toBengaliDigits(deliveryCharge)}
+                            {deliveryCharge === 0 ? "৳ ০ (ফ্রি)" : `৳ ${toBengaliDigits(deliveryCharge)}`}
                           </td>
                         </tr>
                         <tr className="total">
-                          <th>মোট প্রদেয় বিল</th>
+                          <th>{totalLabel}</th>
                           <td className="val">
                             ৳ {toBengaliDigits(grandTotal)}
                           </td>
@@ -1308,7 +1335,7 @@ export default function ShifaLandingPage() {
                     className="s-cf-submit-btn"
                   >
                     {isSubmitting ? (
-                      <span>অর্ডার প্রসেস হচ্ছে...</span>
+                      <span>{submittingBtnText}</span>
                     ) : (
                       <span>
                         {submitBtnText} - ৳ {toBengaliDigits(grandTotal)}
@@ -1388,7 +1415,7 @@ export default function ShifaLandingPage() {
               ✓
             </div>
             <h3 className="text-2xl font-bold text-[#08441F] mb-1">
-              আলহামদুলিল্লাহ! আপনার অর্ডার সফল হয়েছে
+              {checkoutConfig.success_title || "আলহামদুলিল্লাহ! আপনার অর্ডার সফল হয়েছে"}
             </h3>
             <p className="text-stone-600 text-sm mb-4">
               অর্ডার আইডি: <span className="font-bold text-stone-900">{orderSuccess.orderId}</span>
@@ -1415,7 +1442,10 @@ export default function ShifaLandingPage() {
               </p>
               <p className="flex justify-between pt-1 text-base font-bold text-[#0E5A2E]">
                 <span>মোট প্রদেয় বিল:</span>
-                <span>৳ {toBengaliDigits(orderSuccess.total)} (ফ্রি হোম ডেলিভারি)</span>
+                <span>
+                  ৳ {toBengaliDigits(orderSuccess.total)}
+                  {deliveryCharge === 0 ? " (ফ্রি হোম ডেলিভারি)" : ""}
+                </span>
               </p>
             </div>
 
@@ -1426,7 +1456,7 @@ export default function ShifaLandingPage() {
               }}
               className="w-full bg-[#0E5A2E] hover:bg-[#2E8B4A] text-white font-bold py-3 px-6 rounded-xl transition duration-200 shadow-lg text-lg cursor-pointer"
             >
-              ঠিক আছে
+              {checkoutConfig.success_btn_text || "ঠিক আছে"}
             </button>
           </div>
         </div>

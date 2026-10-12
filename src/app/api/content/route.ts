@@ -53,9 +53,6 @@ export async function GET(request: Request) {
     const landing = landingRes.data || null;
     const pages = pagesRes.data || [];
 
-    const activePrice = product && Number(product.price) > 0 ? Number(product.price) : 950;
-    const regularPrice = product && Number(product.original_price) > 0 ? Number(product.original_price) : 1450;
-
     // Pick sections data: Draft if in preview mode, else Published
     const activeSectionsData = isPreview
       ? (landing?.draft_sections_data || landing?.sections_data || {})
@@ -67,6 +64,29 @@ export async function GET(request: Request) {
 
     const heroSection = activeSectionsData?.hero || {};
     const announcementSection = activeSectionsData?.announcement || {};
+    const checkoutSection = activeSectionsData?.checkout || {};
+
+    const activePrice =
+      checkoutSection.price_current !== undefined && Number(checkoutSection.price_current) > 0
+        ? Number(checkoutSection.price_current)
+        : product && Number(product.price) > 0
+        ? Number(product.price)
+        : 950;
+
+    const regularPrice =
+      checkoutSection.price_regular !== undefined && Number(checkoutSection.price_regular) > 0
+        ? Number(checkoutSection.price_regular)
+        : product && Number(product.original_price) > 0
+        ? Number(product.original_price)
+        : 1450;
+
+    if (product) {
+      product.price = activePrice;
+      product.original_price = regularPrice;
+      if (checkoutSection.product_name) {
+        product.name_primary = checkoutSection.product_name;
+      }
+    }
 
     // Map backwards-compatible settings dictionary for existing components
     const settingsDict: Record<string, string> = {
@@ -80,7 +100,7 @@ export async function GET(request: Request) {
       is_announcement_active: announcementSection.visible !== false && settings.is_announcement_active !== false ? "true" : "false",
       price_current: String(activePrice),
       price_regular: String(regularPrice),
-      product_name: product?.name_primary || "শিফা পেইন কেয়ার অয়েল",
+      product_name: checkoutSection.product_name || product?.name_primary || "শিফা পেইন কেয়ার অয়েল",
       hero_tag: heroSection.badge_text || "১০০% প্রাকৃতিক ও নিরাপদ",
       hero_title: heroSection.title || landing?.title || product?.name_primary || "শিফা পেইন কেয়ার অয়েল",
       hero_subtitle: heroSection.subtitle || landing?.subtitle || "প্রকৃতির ছোঁয়ায় ব্যথা নিরাময়ের বিশ্বস্ত সঙ্গী",
