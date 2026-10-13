@@ -4,6 +4,18 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const revalidate = 0; // Always serve fresh data
 
+function parseNumeric(val: any): number {
+  if (val === null || val === undefined || val === "") return 0;
+  const bnToEn: Record<string, string> = {
+    "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+    "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+  };
+  const cleaned = String(val)
+    .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+    .replace(/[^0-9.]/g, "");
+  return Number(cleaned) || 0;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -66,19 +78,35 @@ export async function GET(request: Request) {
     const announcementSection = activeSectionsData?.announcement || {};
     const checkoutSection = activeSectionsData?.checkout || {};
 
+    const coCurrent = parseNumeric(checkoutSection.price_current);
+    const coRegular = parseNumeric(checkoutSection.price_regular);
+    const prodPrice = product ? parseNumeric(product.price) : 0;
+    const prodOrig = product ? parseNumeric(product.original_price) : 0;
+
     const activePrice =
-      checkoutSection.price_current !== undefined && Number(checkoutSection.price_current) > 0
-        ? Number(checkoutSection.price_current)
-        : product && Number(product.price) > 0
-        ? Number(product.price)
+      coCurrent > 0
+        ? coCurrent
+        : prodPrice > 0
+        ? prodPrice
+        : coRegular > 0
+        ? coRegular
+        : prodOrig > 0
+        ? prodOrig
         : 950;
 
     const regularPrice =
-      checkoutSection.price_regular !== undefined && Number(checkoutSection.price_regular) > 0
-        ? Number(checkoutSection.price_regular)
-        : product && Number(product.original_price) > 0
-        ? Number(product.original_price)
+      checkoutSection.price_regular !== undefined && checkoutSection.price_regular !== ""
+        ? coRegular
+        : prodOrig > 0
+        ? prodOrig
         : 1450;
+
+    // Ensure activeSectionsData.checkout has the resolved prices
+    activeSectionsData.checkout = {
+      ...checkoutSection,
+      price_current: activePrice,
+      price_regular: regularPrice,
+    };
 
     if (product) {
       product.price = activePrice;

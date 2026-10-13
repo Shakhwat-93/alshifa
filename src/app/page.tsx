@@ -190,9 +190,9 @@ export default function ShifaLandingPage() {
     }
   }, []);
 
-  // ---- Fetch Dynamic Content from Supabase ----
-  useEffect(() => {
-    const previewParam = isPreview ? "&preview=true" : "";
+  // ---- Fetch Dynamic Content from Supabase (including live sync on tab focus) ----
+  const fetchLiveContent = useCallback((previewMode: boolean) => {
+    const previewParam = previewMode ? "&preview=true" : "";
     fetch(`/api/content?t=${Date.now()}${previewParam}`, {
       cache: "no-store",
       headers: { "Cache-Control": "no-cache" },
@@ -216,7 +216,7 @@ export default function ShifaLandingPage() {
         }
         if (data.sections_data && Object.keys(data.sections_data).length > 0) {
           setSectionsData(data.sections_data);
-          
+
           // Sync specific section repeatable items
           if (data.sections_data.reviews?.items?.length > 0) {
             setReviewsList(data.sections_data.reviews.items);
@@ -240,7 +240,25 @@ export default function ShifaLandingPage() {
         }
       })
       .catch((e) => console.log("Failed to load dynamic content:", e));
-  }, [isPreview]);
+  }, []);
+
+  useEffect(() => {
+    fetchLiveContent(isPreview);
+
+    const handleFocus = () => fetchLiveContent(isPreview);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchLiveContent(isPreview);
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [isPreview, fetchLiveContent]);
 
   // Dynamic Product Bottle Image with Safe Fallback
   const productMainImg =
@@ -398,30 +416,44 @@ export default function ShifaLandingPage() {
   // ---- Order Form & Pricing ----
   const [quantity, setQuantity] = useState(1);
 
+  const parsePriceNum = (val: any): number => {
+    if (val === null || val === undefined || val === "") return 0;
+    const bnToEn: Record<string, string> = {
+      "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+      "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+    };
+    const cleaned = String(val)
+      .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+      .replace(/[^0-9.]/g, "");
+    return Number(cleaned) || 0;
+  };
+
   const checkoutConfig = sectionsData?.checkout || {};
 
   const baseUnitPrice =
-    checkoutConfig.price_current !== undefined && Number(checkoutConfig.price_current) > 0
-      ? Number(checkoutConfig.price_current)
-      : productData && Number(productData.price) > 0
-      ? Number(productData.price)
-      : Number(content.price_current) > 0
-      ? Number(content.price_current)
+    parsePriceNum(checkoutConfig.price_current) > 0
+      ? parsePriceNum(checkoutConfig.price_current)
+      : productData && parsePriceNum(productData.price) > 0
+      ? parsePriceNum(productData.price)
+      : parsePriceNum(content.price_current) > 0
+      ? parsePriceNum(content.price_current)
+      : parsePriceNum(checkoutConfig.price_regular) > 0
+      ? parsePriceNum(checkoutConfig.price_regular)
       : 950;
 
   const baseOriginalPrice =
-    checkoutConfig.price_regular !== undefined && checkoutConfig.price_regular !== "" && Number(checkoutConfig.price_regular) >= 0
-      ? Number(checkoutConfig.price_regular)
-      : productData && Number(productData.original_price) > 0
-      ? Number(productData.original_price)
-      : Number(content.price_regular) > 0
-      ? Number(content.price_regular)
+    checkoutConfig.price_regular !== undefined && checkoutConfig.price_regular !== ""
+      ? parsePriceNum(checkoutConfig.price_regular)
+      : productData && parsePriceNum(productData.original_price) > 0
+      ? parsePriceNum(productData.original_price)
+      : parsePriceNum(content.price_regular) > 0
+      ? parsePriceNum(content.price_regular)
       : 1450;
 
   const subtotal = quantity * baseUnitPrice;
   const deliveryCharge =
     checkoutConfig.delivery_charge !== undefined && checkoutConfig.delivery_charge !== ""
-      ? Math.max(0, Number(checkoutConfig.delivery_charge) || 0)
+      ? Math.max(0, parsePriceNum(checkoutConfig.delivery_charge))
       : 0;
   const grandTotal = subtotal + deliveryCharge;
 

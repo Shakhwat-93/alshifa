@@ -78,6 +78,21 @@ function playNotificationChime() {
   }
 }
 
+function cleanAdminNumericStr(val: any): string {
+  const bnToEn: Record<string, string> = {
+    "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+    "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+  };
+  return String(val ?? "")
+    .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+    .replace(/[^0-9]/g, "");
+}
+
+function parseAdminNumber(val: any): number {
+  const cleaned = cleanAdminNumericStr(val);
+  return cleaned ? Number(cleaned) : 0;
+}
+
 export default function EnterpriseAdmin() {
   // ---------------- Authentication ----------------
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -2796,10 +2811,11 @@ export default function EnterpriseAdmin() {
                     <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                       <button
                         onClick={() => {
-                          const newPrice = prompt("নতুন বিক্রয় মূল্য (৳) লিখুন:", String(prod.price || 950));
-                          if (newPrice !== null && !isNaN(Number(newPrice)) && Number(newPrice) > 0) {
-                            const newOrig = prompt("আসল/কাটা দাগের মূল্য (৳) লিখুন (ঐচ্ছিক):", String(prod.original_price || 1450));
-                            handleQuickUpdatePrice(prod.id, Number(newPrice), newOrig ? Number(newOrig) : undefined);
+                          const newPrice = prompt("নতুন বিক্রয় মূল্য (৳) লিখুন (বাংলা বা ইংরেজি সংখ্যায়):", String(prod.price || 950));
+                          const parsedP = parseAdminNumber(newPrice);
+                          if (newPrice !== null && parsedP > 0) {
+                            const newOrig = prompt("আসল/কাটা দাগের মূল্য (৳) লিখুন (ঐচ্ছিক - না চাইলে ০ দিন):", String(prod.original_price || 1450));
+                            handleQuickUpdatePrice(prod.id, parsedP, newOrig !== null ? parseAdminNumber(newOrig) : undefined);
                           }
                         }}
                         className="px-3 py-1.5 rounded-xl bg-amber-50 border border-amber-200 text-xs font-bold text-amber-800 hover:bg-amber-100 flex items-center gap-1 transition"
@@ -3058,7 +3074,7 @@ export default function EnterpriseAdmin() {
           )}
 
           {/* ===================== TAB: SINGLE PRODUCT LANDING BUILDER ===================== */}
-          {activeTab === "landing" && <LandingCmsEditor />}
+          {activeTab === "landing" && <LandingCmsEditor onSaved={fetchAllData} />}
 
           {/* ===================== TAB: GLOBAL SETTINGS & MARKETING ===================== */}
           {activeTab === "settings" && (
@@ -3127,7 +3143,7 @@ export default function EnterpriseAdmin() {
                     </div>
                     {products[0] && (
                       <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold text-xs">
-                        বর্তমান মূল্য: ৳{products[0].price}
+                        বর্তমান মূল্য: ৳{products[0].price || 950}
                       </span>
                     )}
                   </div>
@@ -3143,19 +3159,23 @@ export default function EnterpriseAdmin() {
                             বিক্রয় মূল্য (৳) <span className="text-emerald-700">* (কাস্টমার এই মূল্যে কিনবে)</span>
                           </label>
                           <input
-                            type="number"
-                            defaultValue={products[0].price}
+                            type="text"
+                            inputMode="numeric"
+                            key={`p-${products[0].price}`}
+                            defaultValue={products[0].price || 950}
                             id="settings_product_price"
                             className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-emerald-500"
                           />
                         </div>
                         <div>
                           <label className="block text-xs font-semibold text-gray-700 mb-1">
-                            আসল/রেগুলার মূল্য (৳) <span className="text-gray-400">(কাটা দাগে দেখাবে)</span>
+                            আসল/রেগুলার মূল্য (৳) <span className="text-gray-400">(কাটা দাগে দেখাবে, না চাইলে ০ দিন)</span>
                           </label>
                           <input
-                            type="number"
-                            defaultValue={products[0].original_price || 1450}
+                            type="text"
+                            inputMode="numeric"
+                            key={`o-${products[0].original_price}`}
+                            defaultValue={products[0].original_price ?? 1450}
                             id="settings_product_orig_price"
                             className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-500 focus:ring-2 focus:ring-emerald-500"
                           />
@@ -3173,7 +3193,7 @@ export default function EnterpriseAdmin() {
                               const el = document.getElementById("settings_product_price") as HTMLInputElement;
                               if (el) el.value = String(preset);
                             }}
-                            className="px-2.5 py-1 text-xs rounded-lg bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition"
+                            className="px-2.5 py-1 text-xs rounded-lg bg-white border border-emerald-200 text-emerald-800 font-bold hover:bg-emerald-100 transition cursor-pointer"
                           >
                             ৳{preset}
                           </button>
@@ -3186,11 +3206,11 @@ export default function EnterpriseAdmin() {
                           onClick={() => {
                             const pEl = document.getElementById("settings_product_price") as HTMLInputElement;
                             const oEl = document.getElementById("settings_product_orig_price") as HTMLInputElement;
-                            const newP = Number(pEl?.value) || products[0].price;
-                            const newO = Number(oEl?.value) || products[0].original_price;
+                            const newP = parseAdminNumber(pEl?.value) || products[0].price || 950;
+                            const newO = oEl ? parseAdminNumber(oEl.value) : products[0].original_price;
                             handleQuickUpdatePrice(products[0].id, newP, newO);
                           }}
-                          className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5"
+                          className="px-5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer"
                         >
                           <Save className="w-3.5 h-3.5" />
                           <span>মূল্য সংরক্ষণ করুন (Save Price)</span>
@@ -4481,10 +4501,15 @@ export default function EnterpriseAdmin() {
                     বিক্রয় মূল্য (৳) *
                   </label>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     required
-                    value={productForm.price}
-                    onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })}
+                    value={productForm.price || ""}
+                    onChange={(e) => {
+                      const cleaned = cleanAdminNumericStr(e.target.value);
+                      setProductForm({ ...productForm, price: cleaned ? Number(cleaned) : ("" as any) });
+                    }}
+                    placeholder="যেমন: 950"
                     className="w-full px-3 py-2 rounded-xl border border-gray-200 font-bold text-gray-900"
                   />
                   <span className="text-[10px] text-emerald-600 font-semibold block mt-1">
@@ -4496,9 +4521,14 @@ export default function EnterpriseAdmin() {
                     আসল মূল্য (৳)
                   </label>
                   <input
-                    type="number"
-                    value={productForm.original_price}
-                    onChange={(e) => setProductForm({ ...productForm, original_price: Number(e.target.value) })}
+                    type="text"
+                    inputMode="numeric"
+                    value={productForm.original_price ?? ""}
+                    onChange={(e) => {
+                      const cleaned = cleanAdminNumericStr(e.target.value);
+                      setProductForm({ ...productForm, original_price: cleaned ? Number(cleaned) : 0 });
+                    }}
+                    placeholder="যেমন: 1450 বা 0"
                     className="w-full px-3 py-2 rounded-xl border border-gray-200 font-bold text-gray-500"
                   />
                   <span className="text-[10px] text-gray-400 block mt-1">
@@ -4508,9 +4538,13 @@ export default function EnterpriseAdmin() {
                 <div>
                   <label className="block font-semibold text-gray-600 mb-1">স্টক পরিমাণ</label>
                   <input
-                    type="number"
-                    value={productForm.stock}
-                    onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })}
+                    type="text"
+                    inputMode="numeric"
+                    value={productForm.stock ?? ""}
+                    onChange={(e) => {
+                      const cleaned = cleanAdminNumericStr(e.target.value);
+                      setProductForm({ ...productForm, stock: cleaned ? Number(cleaned) : 0 });
+                    }}
                     className="w-full px-3 py-2 rounded-xl border border-gray-200 font-bold"
                   />
                 </div>

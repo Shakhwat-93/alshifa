@@ -5,16 +5,70 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function parseNumeric(val: any): number {
+  if (val === null || val === undefined || val === "") return 0;
+  const bnToEn: Record<string, string> = {
+    "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+    "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+  };
+  const cleaned = String(val)
+    .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+    .replace(/[^0-9.]/g, "");
+  return Number(cleaned) || 0;
+}
+
 export async function GET() {
   try {
-    const { data: landing, error } = await supabaseAdmin
-      .from("app_landing_pages")
-      .select("*")
-      .eq("slug", "shifa-care")
-      .maybeSingle();
+    const [{ data: landing, error }, { data: prod }] = await Promise.all([
+      supabaseAdmin
+        .from("app_landing_pages")
+        .select("*")
+        .eq("slug", "shifa-care")
+        .maybeSingle(),
+      supabaseAdmin
+        .from("app_products")
+        .select("*")
+        .order("sort_order", { ascending: true })
+        .limit(1)
+        .maybeSingle(),
+    ]);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    if (landing) {
+      const fallbackPrice =
+        prod && parseNumeric(prod.price) > 0
+          ? parseNumeric(prod.price)
+          : prod && parseNumeric(prod.original_price) > 0
+          ? parseNumeric(prod.original_price)
+          : 950;
+      const fallbackOrig =
+        prod && parseNumeric(prod.original_price) > fallbackPrice
+          ? parseNumeric(prod.original_price)
+          : 1450;
+
+      if (landing.sections_data) {
+        const co = landing.sections_data.checkout || {};
+        const curP = parseNumeric(co.price_current);
+        const regP = parseNumeric(co.price_regular);
+        landing.sections_data.checkout = {
+          ...co,
+          price_current: curP > 0 ? curP : regP > 0 ? regP : fallbackPrice,
+          price_regular: co.price_regular !== undefined ? regP : fallbackOrig,
+        };
+      }
+      if (landing.draft_sections_data) {
+        const co = landing.draft_sections_data.checkout || {};
+        const curP = parseNumeric(co.price_current);
+        const regP = parseNumeric(co.price_regular);
+        landing.draft_sections_data.checkout = {
+          ...co,
+          price_current: curP > 0 ? curP : regP > 0 ? regP : fallbackPrice,
+          price_regular: co.price_regular !== undefined ? regP : fallbackOrig,
+        };
+      }
     }
 
     // Fetch latest revisions
@@ -32,6 +86,7 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       landing,
+      product: prod || null,
       revisions,
     });
   } catch (err: any) {
@@ -132,6 +187,36 @@ export async function PATCH(request: Request) {
     const targetSectionsData = sections_data || existing.draft_sections_data || existing.sections_data || {};
     const targetSectionsOrder = sections_order || existing.draft_sections_order || existing.sections_order || [];
 
+    // Sanitize and normalize checkout pricing so price_current is never 0
+    if (targetSectionsData?.checkout) {
+      const co = targetSectionsData.checkout;
+      const rawCurrent = parseNumeric(co.price_current);
+      const rawRegular = parseNumeric(co.price_regular);
+      const rawDelivery = co.delivery_charge !== undefined ? parseNumeric(co.delivery_charge) : 0;
+
+      // If admin entered 0 in price_current and a valid price in price_regular, use price_regular as selling price
+      const effectivePrice =
+        rawCurrent > 0
+          ? rawCurrent
+          : rawRegular > 0
+          ? rawRegular
+          : parseNumeric(existing.sections_data?.checkout?.price_current) > 0
+          ? parseNumeric(existing.sections_data?.checkout?.price_current)
+          : 950;
+
+      const effectiveRegular =
+        rawCurrent > 0
+          ? rawRegular
+          : 0;
+
+      targetSectionsData.checkout = {
+        ...co,
+        price_current: effectivePrice,
+        price_regular: effectiveRegular,
+        delivery_charge: rawDelivery,
+      };
+    }
+
     // Sync legacy columns for compatibility if modified
     const syncFeatures = features || targetSectionsData?.badges?.items || existing.features;
     const syncTestimonials = testimonials || targetSectionsData?.reviews?.items || existing.testimonials;
@@ -160,9 +245,15 @@ export async function PATCH(request: Request) {
     };
 
     if (action === "save_draft") {
-      // Save draft only
+      // Save draft, and also sync checkout pricing live so price changes are never stuck
       baseUpdate.draft_sections_data = targetSectionsData;
       baseUpdate.draft_sections_order = targetSectionsOrder;
+      if (targetSectionsData?.checkout) {
+        baseUpdate.sections_data = {
+          ...(existing.sections_data || {}),
+          checkout: targetSectionsData.checkout,
+        };
+      }
       baseUpdate.status = "draft";
     } else {
       // Publish live
@@ -186,28 +277,37 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: saveError.message }, { status: 500 });
     }
 
-    // If published, create revision snapshot and sync product price if changed
-    if (action === "publish") {
-      const checkoutCfg = targetSectionsData?.checkout;
-      if (checkoutCfg) {
-        const prodUpdate: any = {};
-        if (checkoutCfg.price_current !== undefined && Number(checkoutCfg.price_current) > 0) {
-          prodUpdate.price = Number(checkoutCfg.price_current);
-        }
-        if (checkoutCfg.price_regular !== undefined && Number(checkoutCfg.price_regular) > 0) {
-          prodUpdate.original_price = Number(checkoutCfg.price_regular);
-        }
-        if (checkoutCfg.product_name) {
-          prodUpdate.name_primary = checkoutCfg.product_name;
-        }
-        if (Object.keys(prodUpdate).length > 0) {
+    // Always sync product price & name to app_products so both tables match 100%
+    const checkoutCfg = targetSectionsData?.checkout;
+    if (checkoutCfg) {
+      const prodUpdate: any = {};
+      if (checkoutCfg.price_current !== undefined && parseNumeric(checkoutCfg.price_current) > 0) {
+        prodUpdate.price = parseNumeric(checkoutCfg.price_current);
+      }
+      if (checkoutCfg.price_regular !== undefined) {
+        const regVal = parseNumeric(checkoutCfg.price_regular);
+        prodUpdate.original_price = regVal > 0 ? regVal : null;
+      }
+      if (checkoutCfg.product_name) {
+        prodUpdate.name_primary = checkoutCfg.product_name;
+      }
+      if (Object.keys(prodUpdate).length > 0) {
+        const { data: allProds } = await supabaseAdmin
+          .from("app_products")
+          .select("id")
+          .order("sort_order", { ascending: true })
+          .limit(1);
+        if (allProds && allProds[0]?.id) {
           await supabaseAdmin
             .from("app_products")
             .update(prodUpdate)
-            .eq("is_active", true);
+            .eq("id", allProds[0].id);
         }
       }
+    }
 
+    // If published, create revision snapshot
+    if (action === "publish") {
       await supabaseAdmin.from("app_landing_page_revisions").insert({
         landing_page_id: existing.id,
         revision_name: `পাবলিশড - ${new Date().toLocaleDateString("bn-BD")} ${new Date().toLocaleTimeString("bn-BD")}`,
@@ -221,19 +321,19 @@ export async function PATCH(request: Request) {
           canonical_url: baseUpdate.canonical_url,
         },
       });
+    }
 
-      // Targeted Next.js cache revalidation
-      try {
-        revalidatePath("/", "page");
-        revalidatePath("/api/content");
-      } catch (err) {
-        console.warn("Revalidation notice:", err);
-      }
+    // Targeted Next.js cache revalidation
+    try {
+      revalidatePath("/", "page");
+      revalidatePath("/api/content");
+    } catch (err) {
+      console.warn("Revalidation notice:", err);
     }
 
     return NextResponse.json({
       success: true,
-      message: action === "save_draft" ? "ড্রাফট সফলভাবে সেভ হয়েছে।" : "ল্যান্ডিং পেজ সফলভাবে লাইভ পাবলিশ হয়েছে!",
+      message: action === "save_draft" ? "ড্রাফট ও মূল্য সফলভাবে সেভ হয়েছে।" : "ল্যান্ডিং পেজ সফলভাবে লাইভ পাবলিশ হয়েছে!",
       landing: updatedLanding,
     });
   } catch (err: any) {

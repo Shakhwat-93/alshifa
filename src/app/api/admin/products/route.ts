@@ -1,8 +1,73 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+function parseNumeric(val: any): number {
+  if (val === null || val === undefined || val === "") return 0;
+  const bnToEn: Record<string, string> = {
+    "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+    "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+  };
+  const cleaned = String(val)
+    .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+    .replace(/[^0-9.]/g, "");
+  return Number(cleaned) || 0;
+}
+
+async function syncProductToLanding(product: any) {
+  if (!product) return;
+  try {
+    const { data: landing } = await supabaseAdmin
+      .from("app_landing_pages")
+      .select("id, sections_data, draft_sections_data")
+      .eq("slug", "shifa-care")
+      .maybeSingle();
+
+    if (landing) {
+      const validPrice = parseNumeric(product.price) > 0
+        ? parseNumeric(product.price)
+        : parseNumeric(product.original_price) > 0
+        ? parseNumeric(product.original_price)
+        : 950;
+      const validOrigPrice = parseNumeric(product.original_price);
+
+      const pubSections = { ...(landing.sections_data || {}) };
+      pubSections.checkout = {
+        ...(pubSections.checkout || {}),
+        price_current: validPrice,
+        price_regular: validOrigPrice,
+        ...(product.name_primary ? { product_name: product.name_primary } : {}),
+      };
+
+      const draftSections = { ...(landing.draft_sections_data || landing.sections_data || {}) };
+      draftSections.checkout = {
+        ...(draftSections.checkout || {}),
+        price_current: validPrice,
+        price_regular: validOrigPrice,
+        ...(product.name_primary ? { product_name: product.name_primary } : {}),
+      };
+
+      await supabaseAdmin
+        .from("app_landing_pages")
+        .update({
+          sections_data: pubSections,
+          draft_sections_data: draftSections,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", landing.id);
+    }
+
+    try {
+      revalidatePath("/", "page");
+      revalidatePath("/api/content");
+    } catch {}
+  } catch (err) {
+    console.error("Failed to sync product price to landing:", err);
+  }
+}
 
 export async function GET() {
   try {
@@ -46,6 +111,10 @@ export async function POST(request: Request) {
         "-" +
         Math.floor(100 + Math.random() * 900);
 
+    const parsedPrice = parseNumeric(price);
+    const parsedOrig = parseNumeric(original_price);
+    const effectivePrice = parsedPrice > 0 ? parsedPrice : parsedOrig > 0 ? parsedOrig : 950;
+
     const { data, error } = await supabaseAdmin
       .from("app_products")
       .insert({
@@ -53,9 +122,9 @@ export async function POST(request: Request) {
         name_secondary,
         code: code || "SHIFA-" + Math.floor(100 + Math.random() * 900),
         slug: finalSlug,
-        price: Number(price) || 0,
-        original_price: original_price ? Number(original_price) : null,
-        stock: Number(stock) || 0,
+        price: effectivePrice,
+        original_price: parsedOrig > 0 ? parsedOrig : null,
+        stock: parseNumeric(stock),
         description,
         images,
         variants,
@@ -79,6 +148,8 @@ export async function POST(request: Request) {
       });
     }
 
+    await syncProductToLanding(data);
+
     return NextResponse.json({ success: true, product: data });
   } catch (err: any) {
     return NextResponse.json({ error: "Failed to create product" }, { status: 500 });
@@ -91,17 +162,28 @@ export async function PATCH(request: Request) {
 
     // Support bulk spreadsheet mode updates
     if (Array.isArray(body.bulkUpdates)) {
+      let firstUpdatedProduct: any = null;
       for (const item of body.bulkUpdates) {
         if (item.id) {
-          await supabaseAdmin
+          const parsedP = item.price !== undefined ? parseNumeric(item.price) : undefined;
+          const parsedO = item.original_price !== undefined ? parseNumeric(item.original_price) : undefined;
+          const { data: updatedProd } = await supabaseAdmin
             .from("app_products")
             .update({
-              price: item.price !== undefined ? Number(item.price) : undefined,
-              original_price: item.original_price !== undefined ? Number(item.original_price) : undefined,
-              stock: item.stock !== undefined ? Number(item.stock) : undefined,
+              price: parsedP !== undefined && parsedP > 0 ? parsedP : undefined,
+              original_price: parsedO !== undefined ? parsedO : undefined,
+              stock: item.stock !== undefined ? parseNumeric(item.stock) : undefined,
             })
-            .eq("id", item.id);
+            .eq("id", item.id)
+            .select()
+            .single();
+          if (!firstUpdatedProduct && updatedProd) {
+            firstUpdatedProduct = updatedProd;
+          }
         }
+      }
+      if (firstUpdatedProduct) {
+        await syncProductToLanding(firstUpdatedProduct);
       }
       return NextResponse.json({ success: true, message: "Bulk update saved" });
     }
@@ -111,13 +193,16 @@ export async function PATCH(request: Request) {
 
     const cleanUpdates: any = { ...updates };
     if (cleanUpdates.price !== undefined) {
-      cleanUpdates.price = Number(cleanUpdates.price) || 0;
+      const p = parseNumeric(cleanUpdates.price);
+      const o = cleanUpdates.original_price !== undefined ? parseNumeric(cleanUpdates.original_price) : 0;
+      cleanUpdates.price = p > 0 ? p : o > 0 ? o : 950;
     }
     if (cleanUpdates.original_price !== undefined) {
-      cleanUpdates.original_price = cleanUpdates.original_price ? Number(cleanUpdates.original_price) : null;
+      const o = parseNumeric(cleanUpdates.original_price);
+      cleanUpdates.original_price = o > 0 ? o : null;
     }
     if (cleanUpdates.stock !== undefined) {
-      cleanUpdates.stock = Number(cleanUpdates.stock) || 0;
+      cleanUpdates.stock = parseNumeric(cleanUpdates.stock);
     }
 
     const { data, error } = await supabaseAdmin
@@ -128,6 +213,9 @@ export async function PATCH(request: Request) {
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    await syncProductToLanding(data);
+
     return NextResponse.json({ success: true, product: data });
   } catch (err: any) {
     return NextResponse.json({ error: "Failed to update product" }, { status: 500 });

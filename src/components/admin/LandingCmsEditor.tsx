@@ -121,7 +121,17 @@ const SECTION_METAS: Record<string, SectionMeta> = {
   },
 };
 
-export default function LandingCmsEditor() {
+function cleanNumericInput(val: any): string {
+  const bnToEn: Record<string, string> = {
+    "০": "0", "১": "1", "২": "2", "৩": "3", "৪": "4",
+    "৫": "5", "৬": "6", "৭": "7", "৮": "8", "৯": "9",
+  };
+  return String(val ?? "")
+    .replace(/[০-৯]/g, (d) => bnToEn[d] || d)
+    .replace(/[^0-9]/g, "");
+}
+
+export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } = {}) {
   const [activeSubTab, setActiveSubTab] = useState<"sections" | "seo" | "media">("sections");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -278,10 +288,11 @@ export default function LandingCmsEditor() {
         }
         showToast(
           action === "publish"
-            ? "🚀 ল্যান্ডিং পেজ সফলভাবে লাইভ পাবলিশ করা হয়েছে!"
-            : "💾 ড্রাফট সফলভাবে সেভ হয়েছে।"
+            ? "🚀 ল্যান্ডিং পেজ ও নতুন মূল্য সফলভাবে লাইভ পাবলিশ করা হয়েছে!"
+            : "💾 ড্রাফট ও মূল্য সফলভাবে সেভ হয়েছে।"
         );
         fetchLandingData();
+        if (onSaved) onSaved();
       } else {
         showToast(data.error || "সেভ করতে ব্যর্থ হয়েছে।", "error");
       }
@@ -1299,13 +1310,24 @@ export default function LandingCmsEditor() {
 
                           {/* Group 2: Product & Pricing */}
                           <div className="p-4 bg-emerald-50/40 rounded-2xl border border-emerald-200/70 space-y-4">
-                            <div className="flex items-center justify-between border-b border-emerald-200/60 pb-2">
+                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200/60 pb-2">
                               <h5 className="text-xs font-bold text-emerald-900">
                                 ২. পণ্য ও মূল্য নির্ধারণ (Product & Price Configuration)
                               </h5>
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                                লাইভ মূল্য হিসাব
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
+                                  বর্তমান বিক্রয় মূল্য: ৳{sData.price_current && Number(sData.price_current) > 0 ? sData.price_current : 950}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleSave("publish")}
+                                  disabled={saving}
+                                  className="px-3 py-1 rounded-xl bg-gradient-to-r from-[#ff3f60] to-[#ff783e] text-white text-[11px] font-bold flex items-center gap-1 shadow-xs hover:opacity-95 cursor-pointer disabled:opacity-50"
+                                >
+                                  <Rocket className="w-3 h-3" />
+                                  <span>{saving ? "সেভ হচ্ছে..." : "মূল্য লাইভ সেভ করুন"}</span>
+                                </button>
+                              </div>
                             </div>
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
@@ -1328,25 +1350,66 @@ export default function LandingCmsEditor() {
                                 />
                               </div>
                               <div>
-                                <label className="block text-[11px] font-bold text-emerald-800 mb-1">বর্তমান বিক্রয় মূল্য (৳)</label>
+                                <label className="block text-[11px] font-bold text-emerald-800 mb-1">
+                                  মূল বিক্রয় মূল্য (৳) * (কাস্টমার এই দামে কিনবে)
+                                </label>
                                 <input
-                                  type="number"
-                                  min={1}
-                                  value={sData.price_current ?? 950}
-                                  onChange={(e) => updateSectionField("checkout", "price_current", Number(e.target.value))}
-                                  className="w-full px-3 py-2 rounded-xl border-2 border-emerald-500 bg-white text-xs font-black text-emerald-900 focus:ring-2 focus:ring-emerald-600 outline-none"
+                                  type="text"
+                                  inputMode="numeric"
+                                  placeholder="যেমন: 950 বা ৯৫০"
+                                  value={
+                                    sData.price_current !== undefined && sData.price_current !== 0
+                                      ? String(sData.price_current)
+                                      : sData.price_current === ""
+                                      ? ""
+                                      : "950"
+                                  }
+                                  onChange={(e) => {
+                                    const cleaned = cleanNumericInput(e.target.value);
+                                    updateSectionField("checkout", "price_current", cleaned === "" ? "" : Number(cleaned));
+                                  }}
+                                  className="w-full px-3 py-2 rounded-xl border-2 border-emerald-500 bg-white text-sm font-black text-emerald-900 focus:ring-2 focus:ring-emerald-600 outline-none"
                                 />
                               </div>
                               <div>
-                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">পূর্বের / রেগুলার মূল্য (৳)</label>
+                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">
+                                  পূর্বের কাটা দাম (ঐচ্ছিক - না চাইলে ০ দিন)
+                                </label>
                                 <input
-                                  type="number"
-                                  min={0}
-                                  value={sData.price_regular ?? 1450}
-                                  onChange={(e) => updateSectionField("checkout", "price_regular", Number(e.target.value))}
+                                  type="text"
+                                  inputMode="numeric"
+                                  placeholder="যেমন: 1450 বা ০"
+                                  value={
+                                    sData.price_regular !== undefined
+                                      ? String(sData.price_regular)
+                                      : "1450"
+                                  }
+                                  onChange={(e) => {
+                                    const cleaned = cleanNumericInput(e.target.value);
+                                    updateSectionField("checkout", "price_regular", cleaned === "" ? "" : Number(cleaned));
+                                  }}
                                   className="w-full px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-semibold text-gray-600"
                                 />
                               </div>
+                            </div>
+
+                            {/* Quick Price Presets */}
+                            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                              <span className="text-[11px] font-semibold text-emerald-800">কুইক প্রাইস সিলেক্ট:</span>
+                              {[650, 750, 850, 950, 1050, 1200, 1350, 1450].map((preset) => (
+                                <button
+                                  key={preset}
+                                  type="button"
+                                  onClick={() => updateSectionField("checkout", "price_current", preset)}
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
+                                    Number(sData.price_current) === preset
+                                      ? "bg-emerald-700 text-white border-emerald-700 shadow-xs"
+                                      : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                                  }`}
+                                >
+                                  ৳{preset}
+                                </button>
+                              ))}
                             </div>
 
                             <ImageUploadField
@@ -1459,10 +1522,18 @@ export default function LandingCmsEditor() {
                               <div>
                                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">ডেলিভারি চার্জ (৳) (০ = ফ্রি)</label>
                                 <input
-                                  type="number"
-                                  min={0}
-                                  value={sData.delivery_charge ?? 0}
-                                  onChange={(e) => updateSectionField("checkout", "delivery_charge", Number(e.target.value))}
+                                  type="text"
+                                  inputMode="numeric"
+                                  placeholder="0 বা 60"
+                                  value={
+                                    sData.delivery_charge !== undefined
+                                      ? String(sData.delivery_charge)
+                                      : "0"
+                                  }
+                                  onChange={(e) => {
+                                    const cleaned = cleanNumericInput(e.target.value);
+                                    updateSectionField("checkout", "delivery_charge", cleaned === "" ? "" : Number(cleaned));
+                                  }}
                                   className="w-full px-3 py-2 rounded-xl border border-gray-200 text-xs font-bold text-emerald-800"
                                 />
                               </div>
@@ -1576,6 +1647,23 @@ export default function LandingCmsEditor() {
                                 />
                               </div>
                             </div>
+                          </div>
+
+                          {/* Bottom Save & Publish Action Bar inside Checkout Section */}
+                          <div className="flex items-center justify-end gap-3 pt-2">
+                            <button
+                              type="button"
+                              onClick={() => handleSave("publish")}
+                              disabled={saving}
+                              className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#ff3f60] to-[#ff783e] text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-orange-500/20 hover:opacity-95 cursor-pointer disabled:opacity-50"
+                            >
+                              {saving ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                              ) : (
+                                <Rocket className="w-4 h-4" />
+                              )}
+                              <span>{saving ? "পাবলিশ হচ্ছে..." : "পরিবর্তনগুলো সেভ ও লাইভ পাবলিশ করুন"}</span>
+                            </button>
                           </div>
                         </div>
                       )}
