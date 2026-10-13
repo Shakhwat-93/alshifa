@@ -56,7 +56,10 @@ export async function POST(request: Request) {
 
     const orderNumber = "ORD-" + Math.floor(100000 + Math.random() * 900000);
     const qty = Math.max(1, parseInt(quantity, 10) || 1);
-    const price = parseInt(unitPrice, 10) || 950;
+    const price =
+      unitPrice !== undefined && unitPrice !== null && String(unitPrice).trim() !== "" && !isNaN(Number(unitPrice))
+        ? Math.max(0, parseInt(String(unitPrice), 10))
+        : 950;
     const delCharge = parseInt(deliveryCharge, 10) || 0;
     const subtotal = qty * price;
     const grandTotal = subtotal + delCharge;

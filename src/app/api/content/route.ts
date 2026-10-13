@@ -4,6 +4,10 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const revalidate = 0; // Always serve fresh data
 
+function hasNumericValue(val: any): boolean {
+  return val !== undefined && val !== null && String(val).trim() !== "";
+}
+
 function parseNumeric(val: any): number {
   if (val === null || val === undefined || val === "") return 0;
   const bnToEn: Record<string, string> = {
@@ -78,28 +82,17 @@ export async function GET(request: Request) {
     const announcementSection = activeSectionsData?.announcement || {};
     const checkoutSection = activeSectionsData?.checkout || {};
 
-    const coCurrent = parseNumeric(checkoutSection.price_current);
-    const coRegular = parseNumeric(checkoutSection.price_regular);
-    const prodPrice = product ? parseNumeric(product.price) : 0;
-    const prodOrig = product ? parseNumeric(product.original_price) : 0;
+    const activePrice = hasNumericValue(checkoutSection.price_current)
+      ? parseNumeric(checkoutSection.price_current)
+      : product && hasNumericValue(product.price)
+      ? parseNumeric(product.price)
+      : 950;
 
-    const activePrice =
-      coCurrent > 0
-        ? coCurrent
-        : prodPrice > 0
-        ? prodPrice
-        : coRegular > 0
-        ? coRegular
-        : prodOrig > 0
-        ? prodOrig
-        : 950;
-
-    const regularPrice =
-      checkoutSection.price_regular !== undefined && checkoutSection.price_regular !== ""
-        ? coRegular
-        : prodOrig > 0
-        ? prodOrig
-        : 1450;
+    const regularPrice = hasNumericValue(checkoutSection.price_regular)
+      ? parseNumeric(checkoutSection.price_regular)
+      : product && hasNumericValue(product.original_price)
+      ? parseNumeric(product.original_price)
+      : 1450;
 
     // Ensure activeSectionsData.checkout has the resolved prices
     activeSectionsData.checkout = {

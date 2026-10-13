@@ -428,33 +428,31 @@ export default function ShifaLandingPage() {
     return Number(cleaned) || 0;
   };
 
+  const hasPriceVal = (val: any): boolean =>
+    val !== undefined && val !== null && String(val).trim() !== "";
+
   const checkoutConfig = sectionsData?.checkout || {};
 
-  const baseUnitPrice =
-    parsePriceNum(checkoutConfig.price_current) > 0
-      ? parsePriceNum(checkoutConfig.price_current)
-      : productData && parsePriceNum(productData.price) > 0
-      ? parsePriceNum(productData.price)
-      : parsePriceNum(content.price_current) > 0
-      ? parsePriceNum(content.price_current)
-      : parsePriceNum(checkoutConfig.price_regular) > 0
-      ? parsePriceNum(checkoutConfig.price_regular)
-      : 950;
+  const baseUnitPrice = hasPriceVal(checkoutConfig.price_current)
+    ? parsePriceNum(checkoutConfig.price_current)
+    : productData && hasPriceVal(productData.price)
+    ? parsePriceNum(productData.price)
+    : hasPriceVal(content.price_current)
+    ? parsePriceNum(content.price_current)
+    : 950;
 
-  const baseOriginalPrice =
-    checkoutConfig.price_regular !== undefined && checkoutConfig.price_regular !== ""
-      ? parsePriceNum(checkoutConfig.price_regular)
-      : productData && parsePriceNum(productData.original_price) > 0
-      ? parsePriceNum(productData.original_price)
-      : parsePriceNum(content.price_regular) > 0
-      ? parsePriceNum(content.price_regular)
-      : 1450;
+  const baseOriginalPrice = hasPriceVal(checkoutConfig.price_regular)
+    ? parsePriceNum(checkoutConfig.price_regular)
+    : productData && hasPriceVal(productData.original_price)
+    ? parsePriceNum(productData.original_price)
+    : hasPriceVal(content.price_regular)
+    ? parsePriceNum(content.price_regular)
+    : 1450;
 
   const subtotal = quantity * baseUnitPrice;
-  const deliveryCharge =
-    checkoutConfig.delivery_charge !== undefined && checkoutConfig.delivery_charge !== ""
-      ? Math.max(0, parsePriceNum(checkoutConfig.delivery_charge))
-      : 0;
+  const deliveryCharge = hasPriceVal(checkoutConfig.delivery_charge)
+    ? Math.max(0, parsePriceNum(checkoutConfig.delivery_charge))
+    : 0;
   const grandTotal = subtotal + deliveryCharge;
 
   // Analytics tracking guards

@@ -1316,7 +1316,7 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                               </h5>
                               <div className="flex items-center gap-2">
                                 <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-600 text-white shadow-xs">
-                                  বর্তমান বিক্রয় মূল্য: ৳{sData.price_current && Number(sData.price_current) > 0 ? sData.price_current : 950}
+                                  বর্তমান বিক্রয় মূল্য: ৳{sData.price_current !== undefined && sData.price_current !== null && sData.price_current !== "" ? sData.price_current : 950}
                                 </span>
                                 <button
                                   type="button"
@@ -1356,12 +1356,10 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                                 <input
                                   type="text"
                                   inputMode="numeric"
-                                  placeholder="যেমন: 950 বা ৯৫০"
+                                  placeholder="যেমন: 950, ৯৫০ বা 0"
                                   value={
-                                    sData.price_current !== undefined && sData.price_current !== 0
+                                    sData.price_current !== undefined && sData.price_current !== null
                                       ? String(sData.price_current)
-                                      : sData.price_current === ""
-                                      ? ""
                                       : "950"
                                   }
                                   onChange={(e) => {
@@ -1380,7 +1378,7 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                                   inputMode="numeric"
                                   placeholder="যেমন: 1450 বা ০"
                                   value={
-                                    sData.price_regular !== undefined
+                                    sData.price_regular !== undefined && sData.price_regular !== null
                                       ? String(sData.price_regular)
                                       : "1450"
                                   }
@@ -1396,13 +1394,13 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                             {/* Quick Price Presets */}
                             <div className="flex flex-wrap items-center gap-1.5 pt-1">
                               <span className="text-[11px] font-semibold text-emerald-800">কুইক প্রাইস সিলেক্ট:</span>
-                              {[650, 750, 850, 950, 1050, 1200, 1350, 1450].map((preset) => (
+                              {[0, 650, 750, 850, 950, 1050, 1200, 1350, 1450].map((preset) => (
                                 <button
                                   key={preset}
                                   type="button"
                                   onClick={() => updateSectionField("checkout", "price_current", preset)}
                                   className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition cursor-pointer ${
-                                    Number(sData.price_current) === preset
+                                    sData.price_current !== "" && Number(sData.price_current) === preset
                                       ? "bg-emerald-700 text-white border-emerald-700 shadow-xs"
                                       : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100"
                                   }`}

@@ -5,6 +5,10 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function hasNumericValue(val: any): boolean {
+  return val !== undefined && val !== null && String(val).trim() !== "";
+}
+
 function parseNumeric(val: any): number {
   if (val === null || val === undefined || val === "") return 0;
   const bnToEn: Record<string, string> = {
@@ -27,12 +31,12 @@ async function syncProductToLanding(product: any) {
       .maybeSingle();
 
     if (landing) {
-      const validPrice = parseNumeric(product.price) > 0
+      const validPrice = hasNumericValue(product.price)
         ? parseNumeric(product.price)
-        : parseNumeric(product.original_price) > 0
-        ? parseNumeric(product.original_price)
         : 950;
-      const validOrigPrice = parseNumeric(product.original_price);
+      const validOrigPrice = hasNumericValue(product.original_price)
+        ? parseNumeric(product.original_price)
+        : 0;
 
       const pubSections = { ...(landing.sections_data || {}) };
       pubSections.checkout = {
@@ -111,9 +115,8 @@ export async function POST(request: Request) {
         "-" +
         Math.floor(100 + Math.random() * 900);
 
-    const parsedPrice = parseNumeric(price);
     const parsedOrig = parseNumeric(original_price);
-    const effectivePrice = parsedPrice > 0 ? parsedPrice : parsedOrig > 0 ? parsedOrig : 950;
+    const effectivePrice = hasNumericValue(price) ? parseNumeric(price) : 950;
 
     const { data, error } = await supabaseAdmin
       .from("app_products")
@@ -165,12 +168,12 @@ export async function PATCH(request: Request) {
       let firstUpdatedProduct: any = null;
       for (const item of body.bulkUpdates) {
         if (item.id) {
-          const parsedP = item.price !== undefined ? parseNumeric(item.price) : undefined;
+          const parsedP = hasNumericValue(item.price) ? parseNumeric(item.price) : undefined;
           const parsedO = item.original_price !== undefined ? parseNumeric(item.original_price) : undefined;
           const { data: updatedProd } = await supabaseAdmin
             .from("app_products")
             .update({
-              price: parsedP !== undefined && parsedP > 0 ? parsedP : undefined,
+              price: parsedP,
               original_price: parsedO !== undefined ? parsedO : undefined,
               stock: item.stock !== undefined ? parseNumeric(item.stock) : undefined,
             })
@@ -192,10 +195,10 @@ export async function PATCH(request: Request) {
     if (!id) return NextResponse.json({ error: "Product ID required" }, { status: 400 });
 
     const cleanUpdates: any = { ...updates };
-    if (cleanUpdates.price !== undefined) {
-      const p = parseNumeric(cleanUpdates.price);
-      const o = cleanUpdates.original_price !== undefined ? parseNumeric(cleanUpdates.original_price) : 0;
-      cleanUpdates.price = p > 0 ? p : o > 0 ? o : 950;
+    if (hasNumericValue(cleanUpdates.price)) {
+      cleanUpdates.price = parseNumeric(cleanUpdates.price);
+    } else if (cleanUpdates.price !== undefined) {
+      delete cleanUpdates.price;
     }
     if (cleanUpdates.original_price !== undefined) {
       const o = parseNumeric(cleanUpdates.original_price);

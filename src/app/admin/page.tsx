@@ -2811,10 +2811,10 @@ export default function EnterpriseAdmin() {
                     <div className="pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                       <button
                         onClick={() => {
-                          const newPrice = prompt("নতুন বিক্রয় মূল্য (৳) লিখুন (বাংলা বা ইংরেজি সংখ্যায়):", String(prod.price || 950));
+                          const newPrice = prompt("নতুন বিক্রয় মূল্য (৳) লিখুন (বাংলা বা ইংরেজি সংখ্যায়):", String(prod.price ?? 950));
                           const parsedP = parseAdminNumber(newPrice);
-                          if (newPrice !== null && parsedP > 0) {
-                            const newOrig = prompt("আসল/কাটা দাগের মূল্য (৳) লিখুন (ঐচ্ছিক - না চাইলে ০ দিন):", String(prod.original_price || 1450));
+                          if (newPrice !== null && newPrice.trim() !== "" && parsedP >= 0) {
+                            const newOrig = prompt("আসল/কাটা দাগের মূল্য (৳) লিখুন (ঐচ্ছিক - না চাইলে ০ দিন):", String(prod.original_price ?? 1450));
                             handleQuickUpdatePrice(prod.id, parsedP, newOrig !== null ? parseAdminNumber(newOrig) : undefined);
                           }
                         }}
@@ -3143,7 +3143,7 @@ export default function EnterpriseAdmin() {
                     </div>
                     {products[0] && (
                       <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 font-bold text-xs">
-                        বর্তমান মূল্য: ৳{products[0].price || 950}
+                        বর্তমান মূল্য: ৳{products[0].price ?? 950}
                       </span>
                     )}
                   </div>
@@ -3162,7 +3162,7 @@ export default function EnterpriseAdmin() {
                             type="text"
                             inputMode="numeric"
                             key={`p-${products[0].price}`}
-                            defaultValue={products[0].price || 950}
+                            defaultValue={products[0].price ?? 950}
                             id="settings_product_price"
                             className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm font-bold text-gray-900 focus:ring-2 focus:ring-emerald-500"
                           />
@@ -3185,7 +3185,7 @@ export default function EnterpriseAdmin() {
                       {/* Quick Presets */}
                       <div className="flex flex-wrap items-center gap-1.5 pt-1">
                         <span className="text-[11px] text-gray-500 font-medium">কুইক প্রিসেট:</span>
-                        {[750, 850, 950, 1050, 1200, 1450].map((preset) => (
+                        {[0, 750, 850, 950, 1050, 1200, 1450].map((preset) => (
                           <button
                             key={preset}
                             type="button"
@@ -3206,7 +3206,10 @@ export default function EnterpriseAdmin() {
                           onClick={() => {
                             const pEl = document.getElementById("settings_product_price") as HTMLInputElement;
                             const oEl = document.getElementById("settings_product_orig_price") as HTMLInputElement;
-                            const newP = parseAdminNumber(pEl?.value) || products[0].price || 950;
+                            const newP =
+                              pEl?.value !== undefined && pEl.value.trim() !== ""
+                                ? parseAdminNumber(pEl.value)
+                                : (products[0].price ?? 950);
                             const newO = oEl ? parseAdminNumber(oEl.value) : products[0].original_price;
                             handleQuickUpdatePrice(products[0].id, newP, newO);
                           }}
@@ -4504,12 +4507,12 @@ export default function EnterpriseAdmin() {
                     type="text"
                     inputMode="numeric"
                     required
-                    value={productForm.price || ""}
+                    value={productForm.price ?? ""}
                     onChange={(e) => {
                       const cleaned = cleanAdminNumericStr(e.target.value);
-                      setProductForm({ ...productForm, price: cleaned ? Number(cleaned) : ("" as any) });
+                      setProductForm({ ...productForm, price: cleaned !== "" ? Number(cleaned) : ("" as any) });
                     }}
-                    placeholder="যেমন: 950"
+                    placeholder="যেমন: 950 বা 0"
                     className="w-full px-3 py-2 rounded-xl border border-gray-200 font-bold text-gray-900"
                   />
                   <span className="text-[10px] text-emerald-600 font-semibold block mt-1">

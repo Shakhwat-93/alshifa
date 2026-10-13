@@ -5,6 +5,10 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function hasNumericValue(val: any): boolean {
+  return val !== undefined && val !== null && String(val).trim() !== "";
+}
+
 function parseNumeric(val: any): number {
   if (val === null || val === undefined || val === "") return 0;
   const bnToEn: Record<string, string> = {
@@ -39,34 +43,28 @@ export async function GET() {
 
     if (landing) {
       const fallbackPrice =
-        prod && parseNumeric(prod.price) > 0
+        prod && hasNumericValue(prod.price)
           ? parseNumeric(prod.price)
-          : prod && parseNumeric(prod.original_price) > 0
-          ? parseNumeric(prod.original_price)
           : 950;
       const fallbackOrig =
-        prod && parseNumeric(prod.original_price) > fallbackPrice
+        prod && hasNumericValue(prod.original_price)
           ? parseNumeric(prod.original_price)
           : 1450;
 
       if (landing.sections_data) {
         const co = landing.sections_data.checkout || {};
-        const curP = parseNumeric(co.price_current);
-        const regP = parseNumeric(co.price_regular);
         landing.sections_data.checkout = {
           ...co,
-          price_current: curP > 0 ? curP : regP > 0 ? regP : fallbackPrice,
-          price_regular: co.price_regular !== undefined ? regP : fallbackOrig,
+          price_current: hasNumericValue(co.price_current) ? parseNumeric(co.price_current) : fallbackPrice,
+          price_regular: hasNumericValue(co.price_regular) ? parseNumeric(co.price_regular) : fallbackOrig,
         };
       }
       if (landing.draft_sections_data) {
         const co = landing.draft_sections_data.checkout || {};
-        const curP = parseNumeric(co.price_current);
-        const regP = parseNumeric(co.price_regular);
         landing.draft_sections_data.checkout = {
           ...co,
-          price_current: curP > 0 ? curP : regP > 0 ? regP : fallbackPrice,
-          price_regular: co.price_regular !== undefined ? regP : fallbackOrig,
+          price_current: hasNumericValue(co.price_current) ? parseNumeric(co.price_current) : fallbackPrice,
+          price_regular: hasNumericValue(co.price_regular) ? parseNumeric(co.price_regular) : fallbackOrig,
         };
       }
     }
@@ -187,27 +185,22 @@ export async function PATCH(request: Request) {
     const targetSectionsData = sections_data || existing.draft_sections_data || existing.sections_data || {};
     const targetSectionsOrder = sections_order || existing.draft_sections_order || existing.sections_order || [];
 
-    // Sanitize and normalize checkout pricing so price_current is never 0
+    // Sanitize and normalize checkout pricing (allow 0 or any positive number)
     if (targetSectionsData?.checkout) {
       const co = targetSectionsData.checkout;
-      const rawCurrent = parseNumeric(co.price_current);
-      const rawRegular = parseNumeric(co.price_regular);
-      const rawDelivery = co.delivery_charge !== undefined ? parseNumeric(co.delivery_charge) : 0;
+      const effectivePrice = hasNumericValue(co.price_current)
+        ? parseNumeric(co.price_current)
+        : hasNumericValue(existing.sections_data?.checkout?.price_current)
+        ? parseNumeric(existing.sections_data?.checkout?.price_current)
+        : 950;
 
-      // If admin entered 0 in price_current and a valid price in price_regular, use price_regular as selling price
-      const effectivePrice =
-        rawCurrent > 0
-          ? rawCurrent
-          : rawRegular > 0
-          ? rawRegular
-          : parseNumeric(existing.sections_data?.checkout?.price_current) > 0
-          ? parseNumeric(existing.sections_data?.checkout?.price_current)
-          : 950;
+      const effectiveRegular = hasNumericValue(co.price_regular)
+        ? parseNumeric(co.price_regular)
+        : 0;
 
-      const effectiveRegular =
-        rawCurrent > 0
-          ? rawRegular
-          : 0;
+      const rawDelivery = hasNumericValue(co.delivery_charge)
+        ? parseNumeric(co.delivery_charge)
+        : 0;
 
       targetSectionsData.checkout = {
         ...co,
@@ -281,7 +274,7 @@ export async function PATCH(request: Request) {
     const checkoutCfg = targetSectionsData?.checkout;
     if (checkoutCfg) {
       const prodUpdate: any = {};
-      if (checkoutCfg.price_current !== undefined && parseNumeric(checkoutCfg.price_current) > 0) {
+      if (hasNumericValue(checkoutCfg.price_current)) {
         prodUpdate.price = parseNumeric(checkoutCfg.price_current);
       }
       if (checkoutCfg.price_regular !== undefined) {
