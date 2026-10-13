@@ -9,7 +9,8 @@
   --ink:#1E2B22;
   --muted:#46554B;
   --line:#DCE6D8;
-  font-family:'Hind Siliguri','Noto Sans Bengali',system-ui,sans-serif;
+  font-family:'ShifaDigits','Noto Sans Bengali','Hind Siliguri',system-ui,sans-serif;
+  font-variant-numeric:tabular-nums;
   color:var(--ink);
   background:#fff;
   max-width:1140px;
@@ -30,9 +31,10 @@
   padding:48px 40px 20px;
 }
 #shifa-lp .s-tag{
-  display:inline-block;font-size:15px;font-weight:600;
+  display:inline-block;font-size:15.5px;font-weight:700;
   color:#08401F;background:#D6EBD3;
-  padding:4px 14px;border-radius:30px;margin-bottom:14px;
+  padding:5px 16px;border-radius:30px;margin-bottom:14px;
+  letter-spacing:0.01em;
 }
 #shifa-lp .s-hero h1{font-size:46px;line-height:1.2;font-weight:700;color:#08441F;margin-bottom:10px}
 #shifa-lp .s-hero .s-sub{font-size:23px;font-weight:600;color:#1F6B33;margin-bottom:16px}
@@ -262,7 +264,8 @@
   margin: 0 auto;
   padding: 24px 20px 48px;
   box-sizing: border-box;
-  font-family: var(--font-hind-siliguri), 'Hind Siliguri', 'Noto Sans Bengali', system-ui, sans-serif;
+  font-family: 'ShifaDigits', 'Noto Sans Bengali', 'Hind Siliguri', system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 @media (max-width: 767px) {
   .s-checkout-section {
