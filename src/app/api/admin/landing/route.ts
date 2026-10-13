@@ -9,6 +9,26 @@ function hasNumericValue(val: any): boolean {
   return val !== undefined && val !== null && String(val).trim() !== "";
 }
 
+function sanitizeBengaliPayload<T>(val: T): T {
+  if (typeof val === "string") {
+    return val
+      .replace(/\uFFFD[\x85\u2026]/g, "অ")
+      .replace(/\uFFFD(?=য়েল|য়েল|ংশ|স্বস্তি|নুভূতি|র্ডার|নুগ্রহ|নলাইন|ফিসি|রিজিনাল|নুযায়|নন্য|তিরিক্ত|নুমোদিত)/g, "অ")
+      .replace(/\uFFFD/g, "") as unknown as T;
+  }
+  if (Array.isArray(val)) {
+    return val.map((item) => sanitizeBengaliPayload(item)) as unknown as T;
+  }
+  if (val && typeof val === "object") {
+    const out: any = {};
+    for (const [k, v] of Object.entries(val)) {
+      out[k] = sanitizeBengaliPayload(v);
+    }
+    return out;
+  }
+  return val;
+}
+
 function parseNumeric(val: any): number {
   if (val === null || val === undefined || val === "") return 0;
   const bnToEn: Record<string, string> = {
@@ -95,7 +115,8 @@ export async function GET() {
 
 export async function PATCH(request: Request) {
   try {
-    const body = await request.json();
+    const rawBody = await request.json();
+    const body = sanitizeBengaliPayload(rawBody);
     const {
       action = "publish", // 'publish' | 'save_draft' | 'restore_revision'
       revision_id,
