@@ -88,21 +88,38 @@ const DEFAULT_REVIEWS = [
   },
 ];
 
+const DEFAULT_BENEFIT_MAP: Record<string, string> = {
+  "ক্যাস্টর অয়েল": "গভীর ম্যাসাজে জয়েন্টের শুষ্কতা দূর করে ও দীর্ঘস্থায়ী ব্যথা উপশম করে।",
+  "আদার দ্রবণীয় নির্যাস": "প্রাকৃতিক জিঞ্জেরল সমৃদ্ধ যা জয়েন্ট ও পেশীর প্রদাহ দ্রুত কমায়।",
+  "রসুনের দ্রবণীয় নির্যাস": "রক্ত সঞ্চালন বৃদ্ধি করে স্নায়ু ও মাংসপেশির অসাড়তা দূর করে।",
+  "লবঙ্গের নির্যাস": "শক্তিশালী ইউজেনল উপাদান দ্রুত তীব্র ব্যথানাশক অনুভূতি দেয়।",
+  "দারুচিনি": "পেশীর টান ও জয়েন্টের আড়ষ্টতা কমিয়ে স্বাভাবিক গতিশীলতা ফেরায়।",
+  "কালোজিরার তেল": "বাতের ব্যথা ও হাড়ের সংযোগস্থলের ব্যথা নিরাময়ে প্রাচীন মহৌষধ।",
+  "অ্যালোভেরার নির্যাস": "ত্বকের গভীরে পুষ্টি পৌঁছে দিয়ে প্রদাহ ও জ্বালাপোড়া প্রশমিত করে।",
+  "আকন্দ পাতার নির্যাস": "বাতের ব্যথা, ফোলা ভাব ও দীর্ঘমেয়াদী হাঁটুর ব্যথায় অত্যন্ত কার্যকরী।",
+  "নিমপাতার নির্যাস": "অ্যান্টি-ইনফ্ল্যামেটরি উপাদান টিস্যুর ক্ষয় রোধে কার্যকর ভূমিকা রাখে।",
+  "হলুদের নির্যাস": "প্রাকৃতিক কারকিউমিন যা জয়েন্টের অভ্যন্তরীণ প্রদাহ ও ফোলা কমায়।",
+  "ক্যাপসাইসিন": "ব্যথার স্নায়বিক সংকেত ব্লক করে গভীর ও দীর্ঘস্থায়ী স্বস্তি দেয়।",
+  "ইউক্যালিপটাস অয়েল": "শীতল অনুভূতির সাথে রক্ত চলাচল সচল করে পেশীর খিঁচুনি দূর করে।",
+  "মেনথল": "ত্বকে তাৎক্ষণিক শীতল প্রশান্তি দিয়ে তীব্র ব্যথার অস্বস্তি কমিয়ে দেয়।",
+  "পেপারমিন্ট অয়েল": "মাংসপেশির ক্লান্তি ও স্নায়বিক চাপ দূর করে রিফ্রেশিং আরাম দেয়।",
+};
+
 const DEFAULT_INGREDIENTS = [
-  { name: "ক্যাস্টর অয়েল", type: "drop" },
-  { name: "আদার দ্রবণীয় নির্যাস", type: "leaf" },
-  { name: "রসুনের দ্রবণীয় নির্যাস", type: "leaf" },
-  { name: "লবঙ্গের নির্যাস", type: "leaf" },
-  { name: "দারুচিনি", type: "leaf" },
-  { name: "কালোজিরার তেল", type: "drop" },
-  { name: "অ্যালোভেরার নির্যাস", type: "leaf" },
-  { name: "আকন্দ পাতার নির্যাস", type: "leaf" },
-  { name: "নিমপাতার নির্যাস", type: "leaf" },
-  { name: "হলুদের নির্যাস", type: "leaf" },
-  { name: "ক্যাপসাইসিন", type: "leaf" },
-  { name: "ইউক্যালিপটাস অয়েল", type: "drop" },
-  { name: "মেনথল", type: "leaf" },
-  { name: "পেপারমিন্ট অয়েল", type: "drop" },
+  { name: "ক্যাস্টর অয়েল", type: "drop", benefit: "গভীর ম্যাসাজে জয়েন্টের শুষ্কতা দূর করে ও দীর্ঘস্থায়ী ব্যথা উপশম করে।" },
+  { name: "আদার দ্রবণীয় নির্যাস", type: "leaf", benefit: "প্রাকৃতিক জিঞ্জেরল সমৃদ্ধ যা জয়েন্ট ও পেশীর প্রদাহ দ্রুত কমায়।" },
+  { name: "রসুনের দ্রবণীয় নির্যাস", type: "leaf", benefit: "রক্ত সঞ্চালন বৃদ্ধি করে স্নায়ু ও মাংসপেশির অসাড়তা দূর করে।" },
+  { name: "লবঙ্গের নির্যাস", type: "leaf", benefit: "শক্তিশালী ইউজেনল উপাদান দ্রুত তীব্র ব্যথানাশক অনুভূতি দেয়।" },
+  { name: "দারুচিনি", type: "leaf", benefit: "পেশীর টান ও জয়েন্টের আড়ষ্টতা কমিয়ে স্বাভাবিক গতিশীলতা ফেরায়।" },
+  { name: "কালোজিরার তেল", type: "drop", benefit: "বাতের ব্যথা ও হাড়ের সংযোগস্থলের ব্যথা নিরাময়ে প্রাচীন মহৌষধ।" },
+  { name: "অ্যালোভেরার নির্যাস", type: "leaf", benefit: "ত্বকের গভীরে পুষ্টি পৌঁছে দিয়ে প্রদাহ ও জ্বালাপোড়া প্রশমিত করে।" },
+  { name: "আকন্দ পাতার নির্যাস", type: "leaf", benefit: "বাতের ব্যথা, ফোলা ভাব ও দীর্ঘমেয়াদী হাঁটুর ব্যথায় অত্যন্ত কার্যকরী।" },
+  { name: "নিমপাতার নির্যাস", type: "leaf", benefit: "অ্যান্টি-ইনফ্ল্যামেটরি উপাদান টিস্যুর ক্ষয় রোধে কার্যকর ভূমিকা রাখে।" },
+  { name: "হলুদের নির্যাস", type: "leaf", benefit: "প্রাকৃতিক কারকিউমিন যা জয়েন্টের অভ্যন্তরীণ প্রদাহ ও ফোলা কমায়।" },
+  { name: "ক্যাপসাইসিন", type: "leaf", benefit: "ব্যথার স্নায়বিক সংকেত ব্লক করে গভীর ও দীর্ঘস্থায়ী স্বস্তি দেয়।" },
+  { name: "ইউক্যালিপটাস অয়েল", type: "drop", benefit: "শীতল অনুভূতির সাথে রক্ত চলাচল সচল করে পেশীর খিঁচুনি দূর করে।" },
+  { name: "মেনথল", type: "leaf", benefit: "ত্বকে তাৎক্ষণিক শীতল প্রশান্তি দিয়ে তীব্র ব্যথার অস্বস্তি কমিয়ে দেয়।" },
+  { name: "পেপারমিন্ট অয়েল", type: "drop", benefit: "মাংসপেশির ক্লান্তি ও স্নায়বিক চাপ দূর করে রিফ্রেশিং আরাম দেয়।" },
 ];
 
 const DEFAULT_SECTIONS_ORDER = [
@@ -121,6 +138,212 @@ const DEFAULT_SECTIONS_ORDER = [
   "final_cta",
   "checkout",
 ];
+
+// ---- Ingredients Showcase with Mobile Auto-Slide & Benefits ----
+function IngredientsShowcase({ items }: { items: any[] }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Auto-slide effect on mobile
+  useEffect(() => {
+    if (isPaused || !items || items.length <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % items.length);
+    }, 2800);
+    return () => clearInterval(timer);
+  }, [isPaused, items]);
+
+  const handlePrev = () => {
+    if (!items || items.length === 0) return;
+    setCurrentIndex((prev) => (prev - 1 + items.length) % items.length);
+  };
+
+  const handleNext = () => {
+    if (!items || items.length === 0) return;
+    setCurrentIndex((prev) => (prev + 1) % items.length);
+  };
+
+  const minSwipeDistance = 40;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+    setIsPaused(true);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) {
+      setIsPaused(false);
+      return;
+    }
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    if (isLeftSwipe) {
+      handleNext();
+    } else if (isRightSwipe) {
+      handlePrev();
+    }
+    setIsPaused(false);
+  };
+
+  if (!items || items.length === 0) return null;
+
+  return (
+    <div className="s-ing-showcase w-full my-4">
+      {/* 1. Mobile Auto-Slide Carousel (< 768px) */}
+      <div
+        className="block md:hidden relative select-none"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div className="overflow-hidden rounded-2xl p-0.5">
+          <div
+            className="flex transition-transform duration-500 ease-out"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
+            {items.map((ing: any, i: number) => {
+              const benefitText =
+                ing.benefit ||
+                DEFAULT_BENEFIT_MAP[ing.name] ||
+                "ব্যথা উপশমে ও পেশীর স্বাভাবিক স্বস্তি ফেরাতে অত্যন্ত কার্যকরী।";
+              return (
+                <div key={i} className="w-full flex-shrink-0 px-1">
+                  <div className="bg-white rounded-2xl p-4 border border-emerald-200/90 shadow-sm flex flex-col justify-between min-h-[148px] relative overflow-hidden">
+                    <div className="flex items-center justify-between gap-2 border-b border-emerald-50 pb-2.5 mb-2.5">
+                      <div className="flex items-center gap-2.5">
+                        <span className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 shadow-2xs">
+                          {ing.type === "drop" ? (
+                            <svg className="w-5 h-5 fill-emerald-700" viewBox="0 0 24 24">
+                              <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5 fill-emerald-700" viewBox="0 0 24 24">
+                              <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
+                              <path d="M5 19l7-7" />
+                            </svg>
+                          )}
+                        </span>
+                        <div>
+                          <span className="text-[11px] font-semibold text-emerald-600 block leading-none mb-0.5">ভেষজ উপাদান #{toBengaliDigits(i + 1)}</span>
+                          <h4 className="font-bold text-gray-900 text-base leading-snug">
+                            {ing.name}
+                          </h4>
+                        </div>
+                      </div>
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 shrink-0">
+                        {toBengaliDigits(i + 1)} / {toBengaliDigits(items.length)}
+                      </span>
+                    </div>
+
+                    <div className="bg-emerald-50/60 rounded-xl p-2.5 border border-emerald-100/80">
+                      <p className="text-xs font-semibold text-emerald-950/90 leading-relaxed flex items-start gap-1.5">
+                        <span className="shrink-0 text-emerald-700 font-bold">✨ উপকারিতা:</span>
+                        <span>{benefitText}</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Carousel Navigation Buttons & Dots */}
+        <div className="flex items-center justify-between mt-3 px-2">
+          <button
+            type="button"
+            onClick={handlePrev}
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 shadow-xs flex items-center justify-center transition active:scale-95 cursor-pointer"
+            aria-label="Previous Ingredient"
+          >
+            <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+
+          {/* Dots Indicator */}
+          <div className="flex items-center gap-1.5 max-w-[200px] overflow-hidden justify-center">
+            {items.map((_, dotIdx) => (
+              <button
+                key={dotIdx}
+                type="button"
+                onClick={() => setCurrentIndex(dotIdx)}
+                className={`transition-all duration-300 rounded-full cursor-pointer ${
+                  dotIdx === currentIndex
+                    ? "w-5 h-1.5 bg-emerald-600"
+                    : "w-1.5 h-1.5 bg-gray-300 hover:bg-gray-400"
+                }`}
+                aria-label={`Slide ${dotIdx + 1}`}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={handleNext}
+            className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-emerald-50 hover:text-emerald-700 shadow-xs flex items-center justify-center transition active:scale-95 cursor-pointer"
+            aria-label="Next Ingredient"
+          >
+            <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* 2. Desktop Grid View (>= 768px) */}
+      <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        {items.map((ing: any, i: number) => {
+          const benefitText =
+            ing.benefit ||
+            DEFAULT_BENEFIT_MAP[ing.name] ||
+            "ব্যথা উপশমে ও পেশীর স্বাভাবিক স্বস্তি ফেরাতে অত্যন্ত কার্যকরী।";
+          return (
+            <div
+              key={i}
+              className="bg-white rounded-2xl p-3.5 border border-emerald-100 hover:border-emerald-400 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between"
+            >
+              <div className="flex items-center gap-2.5 mb-2.5">
+                <span className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                  {ing.type === "drop" ? (
+                    <svg className="w-4 h-4 fill-emerald-700" viewBox="0 0 24 24">
+                      <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-4 h-4 fill-emerald-700" viewBox="0 0 24 24">
+                      <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
+                      <path d="M5 19l7-7" />
+                    </svg>
+                  )}
+                </span>
+                <div>
+                  <span className="text-[10px] font-semibold text-emerald-600 block leading-none mb-0.5">#{toBengaliDigits(i + 1)}</span>
+                  <h4 className="font-bold text-gray-900 text-sm leading-tight">{ing.name}</h4>
+                </div>
+              </div>
+              <div className="bg-emerald-50/50 rounded-xl p-2.5 border border-emerald-100/60 flex-1 flex flex-col justify-center">
+                <p className="text-[12px] text-emerald-950 font-medium leading-relaxed">
+                  <span className="text-emerald-700 font-bold mr-1">উপকারিতা:</span>
+                  {benefitText}
+                </p>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function ShifaLandingPage() {
   // Preview mode detection
@@ -840,23 +1063,7 @@ export default function ShifaLandingPage() {
               <h2>{ingTitle}</h2>
             </div>
 
-            <ul className="s-ing">
-              {ingredientsList.map((ing: any, i: number) => (
-                <li key={i}>
-                  {ing.type === "drop" ? (
-                    <svg viewBox="0 0 24 24">
-                      <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
-                    </svg>
-                  ) : (
-                    <svg viewBox="0 0 24 24">
-                      <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
-                      <path d="M5 19l7-7" />
-                    </svg>
-                  )}
-                  {ing.name}
-                </li>
-              ))}
-            </ul>
+            <IngredientsShowcase items={ingredientsList} />
 
             <div className="s-hl">
               <b>{hlTitle}</b>

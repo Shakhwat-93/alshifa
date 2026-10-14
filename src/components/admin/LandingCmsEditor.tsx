@@ -924,14 +924,14 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
 
                           <div className="pt-2">
                             <div className="flex items-center justify-between mb-2">
-                              <h5 className="text-xs font-bold text-gray-800">উপাদান তালিকা ({sData.items?.length || 0}টি)</h5>
+                              <h5 className="text-xs font-bold text-gray-800">উপাদান ও উপকারিতা তালিকা ({sData.items?.length || 0}টি)</h5>
                               <button
                                 type="button"
                                 onClick={() => {
                                   const current = sData.items || [];
                                   updateSectionField("ingredients", "items", [
                                     ...current,
-                                    { name: "নতুন ভেষজ উপাদান", type: "leaf" },
+                                    { name: "নতুন ভেষজ উপাদান", type: "leaf", benefit: "প্রাকৃতিক উপাদানে তৈরি যা ব্যথা ও ফোলা ভাব দ্রুত কমায়।" },
                                   ]);
                                 }}
                                 className="px-2.5 py-1 rounded-lg bg-white border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center gap-1 cursor-pointer"
@@ -940,41 +940,59 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                               </button>
                             </div>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                               {(sData.items || []).map((ing: any, iIdx: number) => (
-                                <div key={iIdx} className="p-2 bg-white rounded-xl border border-gray-200 flex items-center gap-2">
-                                  <select
-                                    value={ing.type || "leaf"}
-                                    onChange={(e) => {
-                                      const updated = [...(sData.items || [])];
-                                      updated[iIdx].type = e.target.value;
-                                      updateSectionField("ingredients", "items", updated);
-                                    }}
-                                    className="px-1.5 py-1 rounded-md border border-gray-200 text-xs bg-gray-50"
-                                  >
-                                    <option value="leaf">🌿 পাতা</option>
-                                    <option value="drop">💧 ড্রপ</option>
-                                  </select>
-                                  <input
-                                    type="text"
-                                    value={ing.name || ""}
-                                    onChange={(e) => {
-                                      const updated = [...(sData.items || [])];
-                                      updated[iIdx].name = e.target.value;
-                                      updateSectionField("ingredients", "items", updated);
-                                    }}
-                                    className="flex-1 px-2 py-1 rounded-md border border-gray-200 text-xs font-medium"
-                                  />
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      const updated = (sData.items || []).filter((_: any, i: number) => i !== iIdx);
-                                      updateSectionField("ingredients", "items", updated);
-                                    }}
-                                    className="p-1 text-red-500 hover:bg-red-50 rounded cursor-pointer"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                  </button>
+                                <div key={iIdx} className="p-2.5 bg-white rounded-xl border border-gray-200 shadow-2xs space-y-1.5">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-bold text-gray-400 w-5 text-center shrink-0">#{iIdx + 1}</span>
+                                    <select
+                                      value={ing.type || "leaf"}
+                                      onChange={(e) => {
+                                        const updated = [...(sData.items || [])];
+                                        updated[iIdx] = { ...updated[iIdx], type: e.target.value };
+                                        updateSectionField("ingredients", "items", updated);
+                                      }}
+                                      className="px-2 py-1 rounded-lg border border-gray-200 text-xs bg-gray-50 shrink-0 font-medium"
+                                    >
+                                      <option value="leaf">🌿 পাতা</option>
+                                      <option value="drop">💧 ড্রপ</option>
+                                    </select>
+                                    <input
+                                      type="text"
+                                      value={ing.name || ""}
+                                      onChange={(e) => {
+                                        const updated = [...(sData.items || [])];
+                                        updated[iIdx] = { ...updated[iIdx], name: e.target.value };
+                                        updateSectionField("ingredients", "items", updated);
+                                      }}
+                                      placeholder="উপাদানের নাম"
+                                      className="flex-1 px-2.5 py-1 rounded-lg border border-gray-200 text-xs font-bold text-gray-800"
+                                    />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const updated = (sData.items || []).filter((_: any, i: number) => i !== iIdx);
+                                        updateSectionField("ingredients", "items", updated);
+                                      }}
+                                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg cursor-pointer transition shrink-0"
+                                      title="মুছে ফেলুন"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                  <div>
+                                    <input
+                                      type="text"
+                                      value={ing.benefit || ""}
+                                      onChange={(e) => {
+                                        const updated = [...(sData.items || [])];
+                                        updated[iIdx] = { ...updated[iIdx], benefit: e.target.value };
+                                        updateSectionField("ingredients", "items", updated);
+                                      }}
+                                      placeholder="উপকারিতা / কার্যকারিতা (যেমন: জয়েন্টের শুষ্কতা ও ব্যথা উপশম করে)"
+                                      className="w-full px-2.5 py-1 rounded-lg border border-gray-200 text-xs text-gray-600 bg-gray-50/50 focus:bg-white focus:border-emerald-500"
+                                    />
+                                  </div>
                                 </div>
                               ))}
                             </div>
