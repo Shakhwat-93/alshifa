@@ -1416,6 +1416,26 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                               onChange={(url) => updateSectionField("checkout", "product_image", url)}
                               sectionKey="checkout"
                             />
+
+                            <div className="flex items-center justify-between p-3 bg-white rounded-xl border border-emerald-200/60">
+                              <div>
+                                <span className="text-xs font-bold text-gray-800 block">
+                                  চেকআউট বক্সে পণ্যের মূল্য দেখান
+                                </span>
+                                <span className="text-[10px] text-gray-500">
+                                  {sData.show_product_price !== false ? "পণ্যের মূল্য কার্ডে প্রদর্শিত হবে" : "পণ্যের কার্ড থেকে মূল্য লুকানো থাকবে"}
+                                </span>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={sData.show_product_price !== false}
+                                  onChange={(e) => updateSectionField("checkout", "show_product_price", e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                              </label>
+                            </div>
                           </div>
 
                           {/* Group 3: Customer Info Fields */}
@@ -1540,66 +1560,91 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
 
                           {/* Group 5: Order Review Summary Table */}
                           <div className="p-4 bg-white rounded-2xl border border-gray-200 space-y-3">
-                            <h5 className="text-xs font-bold text-gray-800 border-b border-gray-100 pb-2">
-                              ৫. অর্ডার বিবরণী টেবিল টেক্সট (Order Summary Table Labels)
-                            </h5>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                              <div>
-                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">টেবিল হেডিং</label>
-                                <input
-                                  type="text"
-                                  value={sData.review_table_title ?? "আপনার অর্ডার বিবরণী"}
-                                  onChange={(e) => updateSectionField("checkout", "review_table_title", e.target.value)}
-                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">কলাম ১ লেবেল (বাম)</label>
-                                <input
-                                  type="text"
-                                  value={sData.col_product_label ?? "পণ্য বিবরণ"}
-                                  onChange={(e) => updateSectionField("checkout", "col_product_label", e.target.value)}
-                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">কলাম ২ লেবেল (ডান)</label>
-                                <input
-                                  type="text"
-                                  value={sData.col_price_label ?? "মূল্য"}
-                                  onChange={(e) => updateSectionField("checkout", "col_price_label", e.target.value)}
-                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">সাবটোটাল রো লেবেল</label>
-                                <input
-                                  type="text"
-                                  value={sData.subtotal_label ?? "সাবটোটাল"}
-                                  onChange={(e) => updateSectionField("checkout", "subtotal_label", e.target.value)}
-                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">ডেলিভারি চার্জ রো লেবেল</label>
-                                <input
-                                  type="text"
-                                  value={sData.delivery_charge_label ?? "ডেলিভারি চার্জ"}
-                                  onChange={(e) => updateSectionField("checkout", "delivery_charge_label", e.target.value)}
-                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-[11px] font-semibold text-gray-600 mb-1">মোট প্রদেয় বিল রো লেবেল</label>
-                                <input
-                                  type="text"
-                                  value={sData.total_label ?? "মোট প্রদেয় বিল"}
-                                  onChange={(e) => updateSectionField("checkout", "total_label", e.target.value)}
-                                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-emerald-800"
-                                />
-                              </div>
+                            <div className="flex items-center justify-between border-b border-gray-100 pb-2">
+                              <h5 className="text-xs font-bold text-gray-800">
+                                ৫. অর্ডার বিবরণী টেবিল কনফিগারেশন (Order Summary Table)
+                              </h5>
                             </div>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
+                              <div>
+                                <span className="text-xs font-bold text-gray-800 block">
+                                  অর্ডার বিবরণী টেবিল প্রদর্শন করুন
+                                </span>
+                                <span className="text-[10px] text-gray-500">
+                                  {sData.show_review_table === true ? "টেবিল বর্তমানে চালু রয়েছে" : "টেবিলটি বর্তমানে লুকানো আছে (Hidden)"}
+                                </span>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={sData.show_review_table === true}
+                                  onChange={(e) => updateSectionField("checkout", "show_review_table", e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                              </label>
+                            </div>
+
+                            {sData.show_review_table === true && (
+                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">টেবিল হেডিং</label>
+                                  <input
+                                    type="text"
+                                    value={sData.review_table_title ?? "আপনার অর্ডার বিবরণী"}
+                                    onChange={(e) => updateSectionField("checkout", "review_table_title", e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">কলাম ১ লেবেল (বাম)</label>
+                                  <input
+                                    type="text"
+                                    value={sData.col_product_label ?? "পণ্য বিবরণ"}
+                                    onChange={(e) => updateSectionField("checkout", "col_product_label", e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">কলাম ২ লেবেল (ডান)</label>
+                                  <input
+                                    type="text"
+                                    value={sData.col_price_label ?? "মূল্য"}
+                                    onChange={(e) => updateSectionField("checkout", "col_price_label", e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                  />
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">সাবটোটাল রো লেবেল</label>
+                                  <input
+                                    type="text"
+                                    value={sData.subtotal_label ?? "সাবটোটাল"}
+                                    onChange={(e) => updateSectionField("checkout", "subtotal_label", e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">ডেলিভারি চার্জ রো লেবেল</label>
+                                  <input
+                                    type="text"
+                                    value={sData.delivery_charge_label ?? "ডেলিভারি চার্জ"}
+                                    onChange={(e) => updateSectionField("checkout", "delivery_charge_label", e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-gray-600 mb-1">মোট প্রদেয় বিল রো লেবেল</label>
+                                  <input
+                                    type="text"
+                                    value={sData.total_label ?? "মোট প্রদেয় বিল"}
+                                    onChange={(e) => updateSectionField("checkout", "total_label", e.target.value)}
+                                    className="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-bold text-emerald-800"
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* Group 6: Submit Button & Confirmation Modal */}
@@ -1607,6 +1652,27 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                             <h5 className="text-xs font-bold text-gray-800 border-b border-gray-100 pb-2">
                               ৬. সাবমিট বাটন ও কনফার্মেশন পপ-আপ (Submit Button & Modal)
                             </h5>
+
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-200">
+                              <div>
+                                <span className="text-xs font-bold text-gray-800 block">
+                                  সাবমিট বাটনে মূল্য যুক্ত করুন
+                                </span>
+                                <span className="text-[10px] text-gray-500">
+                                  {sData.show_button_price === true ? "বাটনে মূল্য প্রদর্শিত হবে (যেমন: অর্ডার কনফার্ম করুন - ৳ ৯৫০)" : "বাটনে কোনো মূল্য প্রদর্শিত হবে না (শুধু: অর্ডার কনফার্ম করুন)"}
+                                </span>
+                              </div>
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={sData.show_button_price === true}
+                                  onChange={(e) => updateSectionField("checkout", "show_button_price", e.target.checked)}
+                                  className="sr-only peer"
+                                />
+                                <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                              </label>
+                            </div>
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                               <div>
                                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">সাবমিট বাটন টেক্সট</label>

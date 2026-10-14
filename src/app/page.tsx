@@ -1207,16 +1207,18 @@ export default function ShifaLandingPage() {
                             +
                           </button>
                         </div>
-                        <div className="s-cf-prod-price flex flex-col items-end justify-center">
-                          {baseOriginalPrice > baseUnitPrice && (
-                            <span className="text-[11px] sm:text-xs text-stone-400 line-through font-normal">
-                              ৳ {toBengaliDigits(baseOriginalPrice * quantity)}
+                        {checkoutConfig.show_product_price !== false && baseUnitPrice > 0 && (
+                          <div className="s-cf-prod-price flex flex-col items-end justify-center">
+                            {baseOriginalPrice > baseUnitPrice && (
+                              <span className="text-[11px] sm:text-xs text-stone-400 line-through font-normal">
+                                ৳ {toBengaliDigits(baseOriginalPrice * quantity)}
+                              </span>
+                            )}
+                            <span className="text-base sm:text-lg font-black text-emerald-800">
+                              ৳ {toBengaliDigits(subtotal)}
                             </span>
-                          )}
-                          <span className="text-base sm:text-lg font-black text-emerald-800">
-                            ৳ {toBengaliDigits(subtotal)}
-                          </span>
-                        </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -1305,48 +1307,50 @@ export default function ShifaLandingPage() {
                     </div>
                   </div>
 
-                  {/* Order Review Table */}
-                  <div className="s-cf-group">
-                    <h3 className="s-cf-heading">{reviewTableTitle}</h3>
-                    <table className="s-cf-table">
-                      <thead>
-                        <tr>
-                          <th>{colProductLabel}</th>
-                          <th style={{ textAlign: "right" }}>{colPriceLabel}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <td>
-                            {checkoutProdName} × {toBengaliDigits(quantity)}
-                          </td>
-                          <td className="val">
-                            ৳ {toBengaliDigits(subtotal)}
-                          </td>
-                        </tr>
-                      </tbody>
-                      <tfoot>
-                        <tr>
-                          <th>{subtotalLabel}</th>
-                          <td className="val">
-                            ৳ {toBengaliDigits(subtotal)}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th>{deliveryChargeLabel}</th>
-                          <td className="val" style={{ color: "#0E5A2E", fontWeight: 700 }}>
-                            {deliveryCharge === 0 ? "৳ ০ (ফ্রি)" : `৳ ${toBengaliDigits(deliveryCharge)}`}
-                          </td>
-                        </tr>
-                        <tr className="total">
-                          <th>{totalLabel}</th>
-                          <td className="val">
-                            ৳ {toBengaliDigits(grandTotal)}
-                          </td>
-                        </tr>
-                      </tfoot>
-                    </table>
-                  </div>
+                  {/* Order Review Table (Hidden by default or toggled in CMS) */}
+                  {checkoutConfig.show_review_table === true && (
+                    <div className="s-cf-group">
+                      <h3 className="s-cf-heading">{reviewTableTitle}</h3>
+                      <table className="s-cf-table">
+                        <thead>
+                          <tr>
+                            <th>{colProductLabel}</th>
+                            <th style={{ textAlign: "right" }}>{colPriceLabel}</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>
+                              {checkoutProdName} × {toBengaliDigits(quantity)}
+                            </td>
+                            <td className="val">
+                              ৳ {toBengaliDigits(subtotal)}
+                            </td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <th>{subtotalLabel}</th>
+                            <td className="val">
+                              ৳ {toBengaliDigits(subtotal)}
+                            </td>
+                          </tr>
+                          <tr>
+                            <th>{deliveryChargeLabel}</th>
+                            <td className="val" style={{ color: "#0E5A2E", fontWeight: 700 }}>
+                              {deliveryCharge === 0 ? "৳ ০ (ফ্রি)" : `৳ ${toBengaliDigits(deliveryCharge)}`}
+                            </td>
+                          </tr>
+                          <tr className="total">
+                            <th>{totalLabel}</th>
+                            <td className="val">
+                              ৳ {toBengaliDigits(grandTotal)}
+                            </td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  )}
 
                   {/* Submit Error Alert */}
                   {submitError && (
@@ -1358,7 +1362,7 @@ export default function ShifaLandingPage() {
                     </div>
                   )}
 
-                  {/* Submit Button */}
+                  {/* Submit Button (Just Order Confirm button without price) */}
                   <button
                     type="submit"
                     disabled={isSubmitting}
@@ -1368,7 +1372,10 @@ export default function ShifaLandingPage() {
                       <span>{submittingBtnText}</span>
                     ) : (
                       <span>
-                        {submitBtnText} - ৳ {toBengaliDigits(grandTotal)}
+                        {submitBtnText}
+                        {checkoutConfig.show_button_price === true && grandTotal > 0
+                          ? ` - ৳ ${toBengaliDigits(grandTotal)}`
+                          : ""}
                       </span>
                     )}
                   </button>
