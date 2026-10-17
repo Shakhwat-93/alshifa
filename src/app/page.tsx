@@ -199,7 +199,7 @@ function IngredientsShowcase({ items }: { items: any[] }) {
     <div className="s-ing-showcase">
       {/* 1. Mobile View: Luxury Auto-Slide Carousel (< 768px) */}
       <div
-        className="block md:hidden s-ing-carousel"
+        className="s-ing-carousel"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={onTouchStart}
@@ -285,7 +285,7 @@ function IngredientsShowcase({ items }: { items: any[] }) {
       </div>
 
       {/* 2. Desktop View: 2-Column Luxury Master Grid (>= 768px) */}
-      <div className="hidden md:grid s-ing-grid">
+      <div className="s-ing-grid">
         {items.map((ing: any, i: number) => {
           const benefitText =
             ing.benefit ||

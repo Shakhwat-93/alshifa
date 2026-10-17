@@ -211,6 +211,7 @@
 
 /* Mobile carousel */
 #shifa-lp .s-ing-carousel {
+  display: none;
   position: relative;
   user-select: none;
 }
@@ -377,6 +378,8 @@
   #shifa-lp .s-text{font-size:16.5px}
   #shifa-lp .s-intro-box{padding:22px 16px}
   #shifa-lp .s-intro-box .s-text{font-size:17px}
+  #shifa-lp .s-ing-grid{display:none !important}
+  #shifa-lp .s-ing-carousel{display:block !important}
   #shifa-lp .s-ing-card{padding:16px 14px;border-radius:16px}
   #shifa-lp .s-ing-card-name{font-size:18px}
   #shifa-lp .s-ing-card-benefit{font-size:14.5px;line-height:1.55}
