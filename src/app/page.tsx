@@ -196,20 +196,19 @@ function IngredientsShowcase({ items }: { items: any[] }) {
   if (!items || items.length === 0) return null;
 
   return (
-    <div className="s-ing-showcase w-full my-6">
+    <div className="s-ing-showcase">
       {/* 1. Mobile View: Luxury Auto-Slide Carousel (< 768px) */}
       <div
-        className="block md:hidden relative select-none"
+        className="block md:hidden s-ing-carousel"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
       >
-        {/* Carousel Card Container */}
-        <div className="overflow-hidden rounded-2xl shadow-sm border border-emerald-200/90 bg-white">
+        <div className="s-ing-viewport">
           <div
-            className="flex transition-transform duration-500 ease-out"
+            className="s-ing-track"
             style={{ transform: `translateX(-${currentIndex * 100}%)` }}
           >
             {items.map((ing: any, i: number) => {
@@ -218,59 +217,35 @@ function IngredientsShowcase({ items }: { items: any[] }) {
                 DEFAULT_BENEFIT_MAP[ing.name] ||
                 "ব্যথা উপশমে ও পেশীর স্বাভাবিক স্বস্তি ফেরাতে অত্যন্ত কার্যকরী।";
               return (
-                <div key={i} className="w-full flex-shrink-0 p-4">
-                  <div className="flex flex-col gap-3">
-                    {/* Top Row: Icon + Name + Counter */}
-                    <div className="flex items-center justify-between gap-2.5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0C4A34] to-[#15803D] text-white flex items-center justify-center shrink-0 shadow-xs shadow-emerald-950/20">
-                          {ing.type === "drop" ? (
-                            <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
-                              <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
-                            </svg>
-                          ) : (
-                            <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
-                              <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
-                              <path d="M5 19l7-7" />
-                            </svg>
-                          )}
-                        </div>
-                        <div>
-                          <span className="text-[11px] font-bold text-emerald-700 tracking-wide block uppercase leading-none">
-                            ভেষজ উপাদান #{toBengaliDigits(i + 1)}
-                          </span>
-                          <h4 className="font-extrabold text-gray-900 text-lg leading-tight mt-1">
-                            {ing.name}
-                          </h4>
-                        </div>
+                <div key={i} className="s-ing-slide">
+                  <div className="s-ing-card">
+                    <div className="s-ing-card-head">
+                      <span className="s-ing-card-icon">
+                        {ing.type === "drop" ? (
+                          <svg viewBox="0 0 24 24">
+                            <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
+                          </svg>
+                        ) : (
+                          <svg viewBox="0 0 24 24">
+                            <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
+                            <path d="M5 19l7-7" />
+                          </svg>
+                        )}
+                      </span>
+                      <div className="s-ing-card-title-group">
+                        <h3 className="s-ing-card-name">{ing.name}</h3>
+                        <span className="s-ing-card-tag">১০০% প্রাকৃতিক ভেষজ নির্যাস</span>
                       </div>
-
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/90 shrink-0 tabular-nums">
+                      <span className="s-ing-card-badge">
                         {toBengaliDigits(i + 1)} / {toBengaliDigits(items.length)}
                       </span>
                     </div>
 
-                    {/* Benefit Box - Direct, beautifully padded, zero empty void */}
-                    <div className="bg-gradient-to-br from-emerald-50/90 via-teal-50/40 to-emerald-50/80 rounded-xl p-3 border border-emerald-100">
-                      <div className="flex items-start gap-2">
-                        <span className="text-emerald-800 font-extrabold text-xs shrink-0 mt-0.5">
-                          ✨ উপকারিতা:
-                        </span>
-                        <p className="text-[13.5px] text-gray-800 font-medium leading-relaxed">
-                          {benefitText}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Trust Strip */}
-                    <div className="flex items-center justify-between pt-1 text-[11px] text-gray-500 font-medium">
-                      <span className="flex items-center gap-1 text-emerald-700 font-semibold">
-                        <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                        ১০০% খাঁটি ভেষজ নির্যাস
-                      </span>
-                      <span>কোনো পার্শ্বপ্রতিক্রিয়া নেই</span>
+                    <div className="s-ing-card-body">
+                      <p className="s-ing-card-benefit">
+                        <strong style={{ color: "var(--deep)", marginRight: "6px" }}>উপকারিতা:</strong>
+                        {benefitText}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -279,43 +254,30 @@ function IngredientsShowcase({ items }: { items: any[] }) {
           </div>
         </div>
 
-        {/* Carousel Navigation Bar (Left Arrow + Dots + Right Arrow) */}
-        <div className="flex items-center justify-between mt-3 px-1">
+        {/* Clean, Non-cluttered Mobile Controller */}
+        <div className="s-ing-ctrl">
           <button
             type="button"
             onClick={handlePrev}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 hover:border-emerald-500 text-gray-700 hover:text-emerald-700 hover:bg-emerald-50 shadow-2xs flex items-center justify-center transition active:scale-95 cursor-pointer"
+            className="s-ing-btn"
             aria-label="Previous Ingredient"
           >
-            <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+            <svg viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
 
-          {/* Dots Indicator */}
-          <div className="flex items-center gap-1.5 max-w-[220px] overflow-hidden justify-center py-1">
-            {items.map((_, dotIdx) => (
-              <button
-                key={dotIdx}
-                type="button"
-                onClick={() => setCurrentIndex(dotIdx)}
-                className={`transition-all duration-300 rounded-full cursor-pointer ${
-                  dotIdx === currentIndex
-                    ? "w-6 h-2 bg-emerald-600"
-                    : "w-2 h-2 bg-gray-200 hover:bg-gray-300"
-                }`}
-                aria-label={`Go to slide ${dotIdx + 1}`}
-              />
-            ))}
+          <div className="s-ing-counter">
+            {toBengaliDigits(currentIndex + 1)} / {toBengaliDigits(items.length)}
           </div>
 
           <button
             type="button"
             onClick={handleNext}
-            className="w-9 h-9 rounded-full bg-white border border-gray-200 hover:border-emerald-500 text-gray-700 hover:text-emerald-700 hover:bg-emerald-50 shadow-2xs flex items-center justify-center transition active:scale-95 cursor-pointer"
+            className="s-ing-btn"
             aria-label="Next Ingredient"
           >
-            <svg className="w-4 h-4 stroke-current stroke-2 fill-none" viewBox="0 0 24 24">
+            <svg viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -323,48 +285,39 @@ function IngredientsShowcase({ items }: { items: any[] }) {
       </div>
 
       {/* 2. Desktop View: 2-Column Luxury Master Grid (>= 768px) */}
-      <div className="hidden md:grid md:grid-cols-2 gap-3.5">
+      <div className="hidden md:grid s-ing-grid">
         {items.map((ing: any, i: number) => {
           const benefitText =
             ing.benefit ||
             DEFAULT_BENEFIT_MAP[ing.name] ||
             "ব্যথা উপশমে ও পেশীর স্বাভাবিক স্বস্তি ফেরাতে অত্যন্ত কার্যকরী।";
           return (
-            <div
-              key={i}
-              className="group relative bg-white rounded-2xl p-4 border border-emerald-100 hover:border-emerald-500/80 shadow-2xs hover:shadow-md hover:shadow-emerald-950/5 hover:-translate-y-0.5 transition-all duration-200 flex items-start gap-3.5"
-            >
-              {/* Luxury Icon Badge */}
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#0C4A34] to-[#15803D] text-white flex items-center justify-center shrink-0 shadow-xs shadow-emerald-950/15 group-hover:scale-105 transition-transform duration-200">
-                {ing.type === "drop" ? (
-                  <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
-                    <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 fill-white" viewBox="0 0 24 24">
-                    <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
-                    <path d="M5 19l7-7" />
-                  </svg>
-                )}
+            <div key={i} className="s-ing-card">
+              <div className="s-ing-card-head">
+                <span className="s-ing-card-icon">
+                  {ing.type === "drop" ? (
+                    <svg viewBox="0 0 24 24">
+                      <path d="M12 3s6 6.6 6 11a6 6 0 0 1-12 0c0-4.4 6-11 6-11z" />
+                    </svg>
+                  ) : (
+                    <svg viewBox="0 0 24 24">
+                      <path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14z" />
+                      <path d="M5 19l7-7" />
+                    </svg>
+                  )}
+                </span>
+                <div className="s-ing-card-title-group">
+                  <h3 className="s-ing-card-name">{ing.name}</h3>
+                  <span className="s-ing-card-tag">১০০% প্রাকৃতিক ভেষজ নির্যাস</span>
+                </div>
+                <span className="s-ing-card-badge">#{toBengaliDigits(i + 1)}</span>
               </div>
 
-              {/* Text content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <h4 className="font-extrabold text-gray-900 text-[16px] group-hover:text-emerald-800 transition-colors">
-                    {ing.name}
-                  </h4>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80 shrink-0 tabular-nums">
-                    #{toBengaliDigits(i + 1)}
-                  </span>
-                </div>
-
-                <div className="bg-emerald-50/50 rounded-xl p-2.5 border border-emerald-100/70 group-hover:bg-emerald-50/80 transition-colors">
-                  <p className="text-[13px] text-gray-700 font-medium leading-relaxed">
-                    <span className="text-emerald-800 font-bold mr-1.5">✨ উপকারিতা:</span>
-                    {benefitText}
-                  </p>
-                </div>
+              <div className="s-ing-card-body">
+                <p className="s-ing-card-benefit">
+                  <strong style={{ color: "var(--deep)", marginRight: "6px" }}>উপকারিতা:</strong>
+                  {benefitText}
+                </p>
               </div>
             </div>
           );

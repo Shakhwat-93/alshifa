@@ -119,6 +119,157 @@
 }
 #shifa-lp .s-ing li svg{width:22px;height:22px;flex-shrink:0;fill:var(--leaf)}
 
+/* ---------- ELITE INGREDIENTS SHOWCASE ---------- */
+#shifa-lp .s-ing-showcase {
+  margin: 20px 0 10px;
+  width: 100%;
+}
+#shifa-lp .s-ing-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+#shifa-lp .s-ing-card {
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  border-radius: 18px;
+  padding: 18px 20px;
+  box-shadow: 0 4px 16px rgba(14, 90, 46, 0.04);
+  transition: all 0.25s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#shifa-lp .s-ing-card:hover {
+  border-color: var(--leaf);
+  box-shadow: 0 10px 24px rgba(14, 90, 46, 0.09);
+  transform: translateY(-2px);
+}
+#shifa-lp .s-ing-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+#shifa-lp .s-ing-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--leaf-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid #cce2c9;
+}
+#shifa-lp .s-ing-card-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: var(--deep);
+}
+#shifa-lp .s-ing-card-title-group {
+  flex: 1;
+  min-width: 0;
+}
+#shifa-lp .s-ing-card-name {
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--deep);
+  line-height: 1.3;
+  margin: 0;
+}
+#shifa-lp .s-ing-card-tag {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--leaf);
+  display: block;
+  margin-top: 2px;
+}
+#shifa-lp .s-ing-card-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--deep);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  padding: 3px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+#shifa-lp .s-ing-card-body {
+  background: #f7faf6;
+  border-left: 3px solid var(--leaf);
+  border-radius: 0 10px 10px 0;
+  padding: 10px 14px;
+}
+#shifa-lp .s-ing-card-benefit {
+  font-size: 14.5px;
+  font-weight: 500;
+  color: #2b3a30;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* Mobile carousel */
+#shifa-lp .s-ing-carousel {
+  position: relative;
+  user-select: none;
+}
+#shifa-lp .s-ing-viewport {
+  overflow: hidden;
+  border-radius: 18px;
+}
+#shifa-lp .s-ing-track {
+  display: flex;
+  transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);
+}
+#shifa-lp .s-ing-slide {
+  width: 100%;
+  flex-shrink: 0;
+  padding: 2px 2px;
+}
+#shifa-lp .s-ing-ctrl {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+#shifa-lp .s-ing-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  color: var(--deep);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+#shifa-lp .s-ing-btn:active {
+  transform: scale(0.92);
+  background: var(--leaf-soft);
+}
+#shifa-lp .s-ing-btn svg {
+  width: 16px;
+  height: 16px;
+  stroke: var(--deep);
+  stroke-width: 2.2;
+  fill: none;
+}
+#shifa-lp .s-ing-counter {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--deep);
+  background: var(--leaf-soft);
+  border: 1px solid #cce2c9;
+  padding: 5px 16px;
+  border-radius: 20px;
+}
+
+
 /* highlight */
 #shifa-lp .s-hl{
   margin-top:20px;text-align:center;background:var(--oil-soft);
@@ -226,6 +377,9 @@
   #shifa-lp .s-text{font-size:16.5px}
   #shifa-lp .s-intro-box{padding:22px 16px}
   #shifa-lp .s-intro-box .s-text{font-size:17px}
+  #shifa-lp .s-ing-card{padding:16px 14px;border-radius:16px}
+  #shifa-lp .s-ing-card-name{font-size:18px}
+  #shifa-lp .s-ing-card-benefit{font-size:14.5px;line-height:1.55}
   #shifa-lp .s-ing{grid-template-columns:1fr 1fr;gap:8px}
   #shifa-lp .s-ing li{font-size:16.5px;padding:10px 10px;gap:7px}
   #shifa-lp .s-ing li svg{width:17px;height:17px}
