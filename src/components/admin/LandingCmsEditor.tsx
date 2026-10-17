@@ -889,7 +889,7 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                       {/* 7. INGREDIENTS */}
                       {key === "ingredients" && (
                         <div className="space-y-4">
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                             <div>
                               <label className="block text-xs font-semibold text-gray-700 mb-1">সেকশন হেডিং</label>
                               <input
@@ -898,6 +898,16 @@ export default function LandingCmsEditor({ onSaved }: { onSaved?: () => void } =
                                 onChange={(e) => updateSectionField("ingredients", "title", e.target.value)}
                                 placeholder="উপাদান সমূহ"
                                 className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs font-bold"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs font-semibold text-gray-700 mb-1">সেকশন সাবটাইটেল</label>
+                              <input
+                                type="text"
+                                value={sData.subtitle || ""}
+                                onChange={(e) => updateSectionField("ingredients", "subtitle", e.target.value)}
+                                placeholder="কোনো ক্ষতিকর কেমিক্যাল ছাড়াই..."
+                                className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs"
                               />
                             </div>
                             <div>
